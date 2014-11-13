@@ -2,8 +2,14 @@ To install Photo of the Day plasmoid:
 
 1. mkdir build
 2. cd build
-3. cmake -DCMAKE_INSTALL_PREFIX=`kde4-config --prefix` ..
-3.1 For debug:  cmake -DCMAKE_INSTALL_PREFIX=`kde4-config --prefix` -DCMAKE_BUILD_TYPE=debugfull ..
+3. cmake -DCMAKE_INSTALL_PREFIX=$KF5 -DCMAKE_PREFIX_PATH=$KF5 ..
+3.1 For debug add -DCMAKE_BUILD_TYPE=debugfull ..
 4. make
 5. sudo make install
-6. kbuildsycoca4
+6. kbuildsycoca5
+
+If you have installed Plasmate, you can run 
+ plasmaengineexplorer --engine org.task_struct.photooftheday
+to view data engine or 
+ plasmoidviewer -a org.task_struct.photooftheday
+to view plasmoid in a window
