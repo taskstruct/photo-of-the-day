@@ -1,0 +1,18 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Photo of the day
+Comment=Test for Photo of the day plasmoid
+Type=Service
+Icon=preferences-system-time
+X-KDE-ParentApp=
+X-KDE-PluginInfo-Author=Nikolay S Nikolov
+X-KDE-PluginInfo-Email=nikolay.stef.nikolov@gmail.com
+X-KDE-PluginInfo-License=GPL
+X-KDE-PluginInfo-Name=org.task_struct.photooftheday
+X-KDE-PluginInfo-Version=2.0
+X-KDE-PluginInfo-Website=plasma.kde.org
+X-KDE-ServiceTypes=Plasma/Applet
+X-Plasma-API=declarativeappletscript
+X-Plasma-MainScript=ui/main.qml
+X-Plasma-RemoteLocation=
+X-KDE-PluginInfo-Category=Graphics

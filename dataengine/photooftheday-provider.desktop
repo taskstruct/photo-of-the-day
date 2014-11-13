@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=ServiceType
+X-KDE-ServiceType=PhotoOfTheDay/Plugin
+Comment=Plugin for Plasma PhotoOfTheDay Engine
+Comment[ar]= Плъгин за Plasma PhotoOfTheDay Engine
+
+[PropertyDef::X-KDE-PhotoOfTheDayPlugin-Identifier]
+Type=QString
+ 

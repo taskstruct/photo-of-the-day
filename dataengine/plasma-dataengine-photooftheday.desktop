@@ -1,0 +1,21 @@
+[Desktop Entry]
+Name=DataEngine for Photo of the day
+Name[bg]=Доставя данни за Photo of the day
+
+Comment=DataEngine for Photo of the day
+Comment[bg]=Доставя данни за Photo of the day
+
+Type=Service
+Icon=draw-freehand
+ 
+X-KDE-ServiceTypes=Plasma/DataEngine
+X-KDE-Library=plasma_engine_photooftheday
+ 
+X-KDE-PluginInfo-Author=Nikolay S Nikolov
+X-KDE-PluginInfo-Email=nikolay.stef.nikolov@gmail.com
+X-KDE-PluginInfo-Name=org.task_struct.photooftheday
+X-KDE-PluginInfo-Version=0.2
+X-KDE-PluginInfo-Website=http://plasma.kde.org/
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-License=GPL
+X-KDE-PluginInfo-EnabledByDefault=true

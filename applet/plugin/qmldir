@@ -1,0 +1,3 @@
+module org.task_struct.private.photooftheday
+
+plugin photoofthedayplugin

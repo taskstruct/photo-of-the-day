@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Service
+X-KDE-ServiceTypes=PhotoOfTheDay/Plugin
+# X-KDE-Derived=KPluginInfo
+X-KDE-Library=photooftheday_provider_apod
+# X-KDE-PhotoOfTheDayEngineProvider-SuffixType=Date
+X-KDE-PhotoOfTheDayPlugin-Identifier=apod
+
+Icon=
+
+Name= NASA Photo of the day
+Name[bg]= Снимка на деня на НАСА
+
+Comment=National Geographic picture of the day provider
+Comment[bg]=Предоставя възможност за сваляне на снимки от сайта на НАСА

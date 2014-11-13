@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+    <kcfgfile name=""/>
+    
+    <group name="General">
+        <entry name="showShadow" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="shadowWidth" type="UInt">
+            <default>5</default>
+        </entry>
+        <entry name="shadowSpread" type="Double">
+            <default>0.2</default>
+        </entry>
+        <entry name="shadowColor" type="Color">
+            <default>black</default>
+        </entry>
+        
+        <entry name="showBorder" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="borderWidth" type="UInt">
+            <default>5</default>
+        </entry>
+        <entry name="borderOpacity" type="Double">
+            <default>0.75</default>
+        </entry>
+        <entry name="borderColor" type="Color">
+            <default>red</default>
+        </entry>
+        
+        <entry name="roundedCorners" type="UInt">
+            <default>5</default>
+        </entry>
+        
+        <entry name="animatedTransitions" type="Bool">
+            <default>true</default>
+        </entry>
+    </group>
+    
+    <group name="Providers">
+        <entry name="selectedProvider" type="String">
+            <default></default>
+        </entry>        
+    </group>
+    
+</kcfg>

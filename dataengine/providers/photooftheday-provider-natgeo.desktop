@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Service
+X-KDE-ServiceTypes=PhotoOfTheDay/Plugin
+# X-KDE-Derived=KPluginInfo
+X-KDE-Library=photooftheday_provider_natgeo
+# X-KDE-PhotoOfTheDayEngineProvider-SuffixType=Date
+X-KDE-PhotoOfTheDayPlugin-Identifier=natgeo
+
+Icon=
+
+Name= National Geographic
+Name[bg]= National Geographic
+
+Comment=National Geographic picture of the day provider
+Comment[bg]=Предоставя възможност за сваляне на снимки от National Geographic
