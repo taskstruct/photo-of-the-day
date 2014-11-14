@@ -140,7 +140,7 @@ Item {
         anchors.bottom: imageEffect.bottom
         anchors.margins: 5
         
-        PlasmaComponents.Button {
+        PlasmaComponents.ToolButton {
             iconSource: "go-previous"
             
             enabled: selectedProviderCfg.length != 0
@@ -172,7 +172,7 @@ Item {
             }
         }
         
-        PlasmaComponents.Button {
+        PlasmaComponents.ToolButton {
             iconSource: "go-next"
             
             enabled: selectedProviderCfg.length != 0
@@ -204,7 +204,7 @@ Item {
             }
         }
         
-        PlasmaComponents.Button {
+        PlasmaComponents.ToolButton {
             iconSource: "go-home"
         }
     }
