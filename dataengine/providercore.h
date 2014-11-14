@@ -55,12 +55,18 @@ public:
     
     virtual void requestPhoto(const QString& source, int offset = 0) = 0;
         
+    inline void addref() { ++m_refcount; };
+    inline void deref() { --m_refcount; };
+    inline int refcount() const { return m_refcount; };
+    
 Q_SIGNALS:
     void photoReady(const QString& source, const Plasma::DataEngine::Data& data);
 
 private:
     
     inline Plasma::DataEngine* dataEngine() { return qobject_cast<Plasma::DataEngine*>( parent() ); }
+    
+    int m_refcount;
 };
 
 

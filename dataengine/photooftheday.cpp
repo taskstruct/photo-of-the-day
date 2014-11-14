@@ -41,10 +41,21 @@ bool PhotoOfTheDay::sourceRequestEvent(const QString& identifier)
     
     qDebug() << "identifier = " << identifier;
     
-    
-    // create instance
-    if( m_providers.contains(provider) )
+    if( m_instances.contains(provider) )
     {
+        ProviderCore* instance = m_instances[provider];
+        instance->addref();
+        instance->requestPhoto(identifier);
+        
+        // create empty source until HTTP requests finished
+        setData( identifier, DataEngine::Data() );
+        
+        return true;
+    }
+    else if( m_providers.contains(provider) )
+    {
+        // create instance
+        
         qDebug() << "Creating instance of " << provider << " for source: " << identifier;
         
         QString error;
@@ -55,9 +66,7 @@ bool PhotoOfTheDay::sourceRequestEvent(const QString& identifier)
             return false;
         }
         
-        instance->setObjectName( identifier );
-        
-        m_instances.insert( identifier, instance );
+        m_instances.insert( provider, instance );
         
         connect( instance, &ProviderCore::photoReady, this, [this](const QString&source, const Plasma::DataEngine::Data& data) { 
                    setData( source, data );
@@ -65,11 +74,22 @@ bool PhotoOfTheDay::sourceRequestEvent(const QString& identifier)
         
         connect( this, &PhotoOfTheDay::sourceRemoved, this, [this](const QString& source)
         {               
-            if( m_instances.contains( source ) )
+            const QStringList idSplit = source.split(':', QString::SkipEmptyParts);
+            
+            const QString pr = idSplit[0];
+            
+            if( m_instances.contains( pr ) )
             {
-                qDebug()<< "SOURCE REM " << source;
-                m_instances[source]->deleteLater();
-                m_instances.remove(source);
+                ProviderCore* instance = m_instances[pr];
+                
+                instance->deref();
+                
+                if( instance->refcount() == 0 )
+                {
+                    qDebug()<< "REMOVE PROVIDER" << source;
+                    m_instances[pr]->deleteLater();
+                    m_instances.remove(pr);
+                }
             }
         } );
         
