@@ -6,6 +6,7 @@
 #include <KSycoca>
 
 #include "providercore.h"
+#include "potddatacontainer.h"
 #include "photooftheday.h"
 
 K_EXPORT_PLASMA_DATAENGINE_WITH_JSON(photooftheday, PhotoOfTheDay, "plasma-dataengine-photooftheday.json")
@@ -25,87 +26,25 @@ PhotoOfTheDay::PhotoOfTheDay(QObject* parent, const QVariantList& args): Plasma:
     if( services.isEmpty() ) {
         setData( QLatin1String( "Providers" ), Plasma::DataEngine::Data() );
     }
+    
+    //TODO: Listen for changes with void KSycoca::databaseChanged (   const QStringList &     changedResources    )   
 }
 
 bool PhotoOfTheDay::sourceRequestEvent(const QString& identifier)
-{
-    const QStringList idSplit = identifier.split(':', QString::SkipEmptyParts);
-    
-    if( ( idSplit.count() != 2 ) || idSplit[0].isEmpty() || idSplit[1].isEmpty() ) {
-        qDebug() << "Invalid source name: " << identifier;
+{   
+    auto provider = providerForSource(identifier);
+
+    if( provider == Q_NULLPTR ) {
         return false;
     }
     
-    const QString provider = idSplit[0];
-    const QString appletId = idSplit[1];
+    auto dc = new PotdDataContainer( provider, this);
+    dc->setObjectName(identifier);
+    dc->setStorageEnabled(true);
     
-    qDebug() << "identifier = " << identifier;
+    addSource( dc );
     
-    if( m_instances.contains(provider) )
-    {
-        ProviderCore* instance = m_instances[provider];
-        instance->addref();
-        instance->requestPhoto(identifier);
-        
-        // create empty source until HTTP requests finished
-        setData( identifier, DataEngine::Data() );
-        
-        return true;
-    }
-    else if( m_providers.contains(provider) )
-    {
-        // create instance
-        
-        qDebug() << "Creating instance of " << provider << " for source: " << identifier;
-        
-        QString error;
-        ProviderCore* instance = m_providers[provider]->createInstance<ProviderCore>( this, QVariantList(), &error );
-        
-        if( nullptr == instance ) {
-            qDebug() << "Unable to create instance of " << m_providers[provider]->library() << " because " << error;
-            return false;
-        }
-        
-        m_instances.insert( provider, instance );
-        
-        connect( instance, &ProviderCore::photoReady, this, [this](const QString&source, const Plasma::DataEngine::Data& data) { 
-                   setData( source, data );
-        } );
-        
-        connect( this, &PhotoOfTheDay::sourceRemoved, this, [this](const QString& source)
-        {               
-            const QStringList idSplit = source.split(':', QString::SkipEmptyParts);
-            
-            const QString pr = idSplit[0];
-            
-            if( m_instances.contains( pr ) )
-            {
-                ProviderCore* instance = m_instances[pr];
-                
-                instance->deref();
-                
-                if( instance->refcount() == 0 )
-                {
-                    qDebug()<< "REMOVE PROVIDER" << source;
-                    m_instances[pr]->deleteLater();
-                    m_instances.remove(pr);
-                }
-            }
-        } );
-        
-        instance->requestPhoto(identifier);
-        
-        // create empty source until HTTP requests finished
-        setData( identifier, DataEngine::Data() );
-        
-        return true;
-    }
-    else
-    {
-        qDebug() << provider << "not found";
-    }
-    
-    return false;
+    return true;
 }
 
 Plasma::Service* PhotoOfTheDay::serviceForSource(const QString& source)
@@ -118,6 +57,55 @@ Plasma::Service* PhotoOfTheDay::serviceForSource(const QString& source)
     }
     
     return Plasma::DataEngine::serviceForSource(source);
+}
+
+ProviderCore* PhotoOfTheDay::providerForSource(const QString& source)
+{
+    ProviderCore *instance = Q_NULLPTR;
+    
+    const QString provider = source.split(':').at(0);
+    
+    if( provider.isEmpty() ) {
+        qDebug() << "Invalid source name: " << source;
+        return Q_NULLPTR;
+    }
+    
+    if( m_instances.contains(provider) )
+    {
+        instance = m_instances.value(provider);
+        instance->addref();
+    }
+    else if( m_providers.contains(provider) )
+    {
+        // create instance
+        
+        qDebug() << "Creating instance of " << provider << " for source: " << source;
+        
+        QString error;
+        
+        instance = m_providers[provider]->createInstance<ProviderCore>( this, QVariantList(), &error );
+        
+        if( nullptr == instance ) {
+            qDebug() << "Unable to create instance of " << m_providers[provider]->library() << " because " << error;
+            return Q_NULLPTR;
+        }
+        
+        m_instances.insert( provider, instance );
+    }
+    
+    return instance;
+}
+
+void PhotoOfTheDay::unregisterProvider(const QString& source)
+{
+    const QString provider = source.split(':').at(0);
+    
+    auto pr = m_instances.value(provider);
+    pr->deref();
+    
+    if(pr->refcount() == 0) {
+        m_instances.remove(provider);
+    }
 }
 
 

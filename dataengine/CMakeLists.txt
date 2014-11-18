@@ -8,7 +8,7 @@ include(GenerateExportHeader)
 
 ########### data engine ############
 
-set( plasma_engine_photooftheday_SRCS photooftheday.cpp )
+set( plasma_engine_photooftheday_SRCS photooftheday.cpp potddatacontainer.cpp )
 
 kservice_desktop_to_json(plasma_engine_photooftheday plasma-dataengine-photooftheday.desktop)
 
