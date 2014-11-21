@@ -29,9 +29,12 @@
 #ifndef POTDDATACONTAINER_H
 #define POTDDATACONTAINER_H
 
-#include <plasma/datacontainer.h>
+#include <QtCore/QSharedPointer>
+
+#include <Plasma/DataContainer>
 
 class ProviderCore;
+class Data;
 
 class PotdDataContainer: public Plasma::DataContainer
 {
@@ -41,8 +44,11 @@ public:
     explicit PotdDataContainer( ProviderCore* provider, QObject* parent = 0);
     virtual ~PotdDataContainer();
     
+    void setDataStruct(QSharedPointer<Data> data) { m_data = data; };
+    
 private:
     ProviderCore *m_provider;
+    QSharedPointer<Data> m_data;
 };
 
 #endif // POTDDATACONTAINER_H

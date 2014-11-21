@@ -76,6 +76,7 @@ public:
     ApodProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
     
     void requestPhoto(const QString& source, int offset = 0);
+    void checkForNewPhoto(PotdDataContainer* dataContainer) {};
     
 Q_SIGNALS:
     void error(const QString& reason);

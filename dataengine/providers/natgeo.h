@@ -29,11 +29,14 @@
 #ifndef NATGEOPROVIDER_H
 #define NATGEOPROVIDER_H
 
+#include <QtCore/QSharedPointer>
+
 #include "providercore.h"
 #include "cachemanager.h"
 
 class KJob;
 class CacheManager;
+class PotdDataContainer;
 
 struct Data {
     QString photoUrl;
@@ -57,17 +60,24 @@ public:
     void GetWebPage( const QUrl & url);
     void GetImage();
     
+    void registerDataContainer( PotdDataContainer* dc ) { m_associatedDataContainers.append(dc); };
+        
 Q_SIGNALS:
     void finished( int result );
     
+private slots:
+    void onFiniched( int result );
+    
 private:
     bool parseWebPage( const QByteArray & source );
+        
+    QSharedPointer<Data> m_data;
     
     QString m_error = QString();
-        
-    Data m_data;
     
-    QStringList m_associatedSources;
+    QStringList m_associatedSources; //TODO: remove
+    
+    QList<PotdDataContainer*> m_associatedDataContainers;
     
     friend class NatGeoProvider;
 };
@@ -81,6 +91,7 @@ public:
     virtual ~NatGeoProvider() { delete m_cache; m_cache = Q_NULLPTR; }
     
     void requestPhoto(const QString& source, int offset = 0);
+    void checkForNewPhoto(PotdDataContainer* dataContainer);
     
     inline CacheManager *cacheManager() const { return m_cache; }
     
@@ -90,6 +101,8 @@ Q_SIGNALS:
 private:
     CacheManager *m_cache = Q_NULLPTR;
     QList<DataFetcher*> m_fetchers;
+    
+    QPointer<DataFetcher> m_checker;
 };
 
 #endif // NATGEOPROVIDER_H

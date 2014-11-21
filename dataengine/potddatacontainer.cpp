@@ -39,7 +39,7 @@ m_provider(provider)
    
     connect( this, &Plasma::DataContainer::updateRequested, [this](DataContainer *  source) {
         // request update from provider. This signal is emitted every time the polling interval expires.
-//         m_provider->checkForNewData(this);
+        this->m_provider->checkForNewPhoto(this);
     } );
 }
 

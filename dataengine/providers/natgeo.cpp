@@ -32,6 +32,7 @@
 #include <KIO/Job>
 #include <KIO/StoredTransferJob>
 
+#include "potddatacontainer.h"
 #include "natgeo.h"
 
 K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-natgeo.json", NatGeoProvider )
@@ -95,9 +96,9 @@ void NatGeoProvider::requestPhoto(const QString &source, int offset)
     }
     
     //TODO: check if fetch is running
-    for( DataFetcher *df: m_fetchers )
+    for( auto df: m_fetchers )
     {
-        if( newUrl == df->m_data.canonicalUrl )
+        if( newUrl == df->m_data->canonicalUrl )
         {
             df->m_associatedSources.append(source);
             return;
@@ -118,10 +119,10 @@ void NatGeoProvider::requestPhoto(const QString &source, int offset)
             {
                 Plasma::DataEngine::Data d;
                 
-                d.insert( cPhotoKey, df->m_data.cacheUrl );
-                d.insert( cPageUrlKey, df->m_data.canonicalUrl );
-                d.insert( cPrevPageUrlKey, df->m_data.prevDayUrl );
-                d.insert( cTitleKey, df->m_data.title );
+                d.insert( cPhotoKey, df->m_data->cacheUrl );
+                d.insert( cPageUrlKey, df->m_data->canonicalUrl );
+                d.insert( cPrevPageUrlKey, df->m_data->prevDayUrl );
+                d.insert( cTitleKey, df->m_data->title );
                 
                 emit photoReady(s, d);
             }
@@ -138,19 +139,39 @@ void NatGeoProvider::requestPhoto(const QString &source, int offset)
     newDF->GetWebPage( newUrl );
 }
 
+void NatGeoProvider::checkForNewPhoto(PotdDataContainer* dataContainer)
+{
+    if( m_checker ) {
+        // check is running. just register and wait to finish
+        m_checker->registerDataContainer(dataContainer);
+        return;
+    }
+    
+    m_checker = new DataFetcher(this);
+    m_checker->registerDataContainer(dataContainer);
+    m_checker->GetWebPage( QUrl( QLatin1Literal("http://photography.nationalgeographic.com/photography/photo-of-the-day/") ) );
+    
+//     connect( m_checker.data(), &DataFetcher::finished, [this](int result) {
+//         // delete object
+//         m_checker->deleteLater();
+//     } );
+}
+
+
 //====== DataFetcher =====
-DataFetcher::DataFetcher( QObject *parent): QObject(parent)
+DataFetcher::DataFetcher( QObject *parent): QObject(parent),
+m_data( new Data )
 {
 }
 
 void DataFetcher::GetWebPage( const QUrl & url)
 {
     //=================================================================================
-    m_data.canonicalUrl = QLatin1String("http://photography.nationalgeographic.com/photography/photo-of-the-day/");
-    m_data.cacheUrl = QLatin1String("/home/nikolay/Siberian-Tiger-Image.jpg");
-    m_data.title = QLatin1String("Siberian tiger");
-    m_data.photoUrl = QLatin1String("/home/nikolay/Siberian-Tiger-Image.jpg");
-    m_data.prevDayUrl = QString();
+    m_data->canonicalUrl = QLatin1String("http://photography.nationalgeographic.com/photography/photo-of-the-day/");
+    m_data->cacheUrl = QLatin1String("/home/nikolay/Siberian-Tiger-Image.jpg");
+    m_data->title = QLatin1String("Siberian tiger");
+    m_data->photoUrl = QLatin1String("/home/nikolay/Siberian-Tiger-Image.jpg");
+    m_data->prevDayUrl = QString();
     
     emit finished(0);
     return;
@@ -159,7 +180,7 @@ void DataFetcher::GetWebPage( const QUrl & url)
     
     
     
-    m_data.canonicalUrl = url.toString();
+    m_data->canonicalUrl = url.toString();
     
     connect( KIO::storedGet( url, KIO::Reload, KIO::HideProgressInfo ), &KJob::result, [this] ( KJob *job )
     {        
@@ -191,7 +212,7 @@ void DataFetcher::GetWebPage( const QUrl & url)
 
 void DataFetcher::GetImage()
 {
-    connect( KIO::storedGet( m_data.photoUrl, KIO::Reload, KIO::HideProgressInfo ), &KJob::result, [this] ( KJob *job )
+    connect( KIO::storedGet( m_data->photoUrl, KIO::Reload, KIO::HideProgressInfo ), &KJob::result, [this] ( KJob *job )
     {
         if( 0 != job->error() )
         {
@@ -207,13 +228,13 @@ void DataFetcher::GetImage()
             
             auto provider = qobject_cast<NatGeoProvider*>( parent() );
             
-            if( provider->cacheManager()->save( stJob->url().fileName(), stJob->data(), m_data.cacheUrl ) )
+            if( provider->cacheManager()->save( stJob->url().fileName(), stJob->data(), m_data->cacheUrl ) )
             {
             }
             else
             {
                 //TODO: When we don't use cache or save failed pass image URL to applet
-                m_data.cacheUrl = m_data.photoUrl;
+                m_data->cacheUrl = m_data->photoUrl;
             }
             
             emit finished(0);
@@ -232,7 +253,7 @@ bool DataFetcher::parseWebPage(const QByteArray& source)
         return false;
     }
     
-    m_data.canonicalUrl = regExp.cap(1);
+    m_data->canonicalUrl = regExp.cap(1);
     
     
     // get image URL. I use URL for Twitter. There is another URL for Google+ and "real" URL in <div class="primary_photo">. All generate the same image
@@ -243,7 +264,7 @@ bool DataFetcher::parseWebPage(const QByteArray& source)
         return false;
     }
     
-    m_data.photoUrl = QLatin1Literal("http:") + regExp.cap(1);
+    m_data->photoUrl = QLatin1Literal("http:") + regExp.cap(1);
     
     
     // get previous day URL
@@ -251,11 +272,11 @@ bool DataFetcher::parseWebPage(const QByteArray& source)
     regExp.setPattern( pattern );
     
     if( regExp.indexIn( source ) != -1 ) {
-        m_data.prevDayUrl = QLatin1Literal("http://photography.nationalgeographic.com") + regExp.cap(1);
+        m_data->prevDayUrl = QLatin1Literal("http://photography.nationalgeographic.com") + regExp.cap(1);
     }
     
     // get title
-    m_data.title = getTitle(source);
+    m_data->title = getTitle(source);
     
         
     //TODO: Description [opt]: <meta name="description" content="Sharks gather to feed in the waters off Mexico’s Guadalupe Island in this Photo of the Day from the National Geographic Photo Contest." />
@@ -263,6 +284,24 @@ bool DataFetcher::parseWebPage(const QByteArray& source)
     return true;   
 }
 
+void DataFetcher::onFiniched(int result)
+{
+    if( result ) {
+        //TODO: set result to all registered data containers
+        return;
+    }
+    
+    for( PotdDataContainer* dc: m_associatedDataContainers ) {
+        
+        // save data in case 
+        dc->setDataStruct( m_data );
+        
+        dc->setData( cPhotoKey, m_data->cacheUrl );
+        dc->setData( cPageUrlKey, m_data->canonicalUrl );
+        dc->setData( cPrevPageUrlKey, m_data->prevDayUrl );
+        dc->setData( cTitleKey, m_data->title );
+    }
+}
 
 
 
