@@ -3,21 +3,12 @@
 
 #include "photooftheday_export.h"
 
-class QSqlQuery;
-class QSqlRecord;
-
 class PHOTOOFTHEDAY_EXPORT CacheManager
 {
 public:
-    static CacheManager* create( const QString& pid, const QString& createStatement );
+    static CacheManager* create( const QString& pid );
     
     ~CacheManager();
-    
-    bool isValid() const;
-
-    // SQL cache
-    int insert( const QSqlQuery& q );
-    QSqlRecord get();
     
     // image cache
     bool save(const QString& imageName, const QByteArray& data, QString& cacheName );

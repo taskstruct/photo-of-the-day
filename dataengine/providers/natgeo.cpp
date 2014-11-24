@@ -74,7 +74,7 @@ static QString getTitle( const QByteArray &source )
 NatGeoProvider::NatGeoProvider(QObject *parent, const QVariantList &args):
 ProviderCore(parent, args)
 {
-    CacheManager *m_cache = CacheManager::create( QLatin1String("natgeo"), QLatin1String("CREATE TABLE...") ); //TODO
+    CacheManager *m_cache = CacheManager::create( QLatin1String("natgeo") );
 }
 
 void NatGeoProvider::requestPhoto(const QString &source, int offset)

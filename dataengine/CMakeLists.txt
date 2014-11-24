@@ -1,6 +1,5 @@
 project(plasma_engine_photooftheday)
 
-find_package(Qt5 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Sql )
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS Plasma Service )
 
 include(GenerateExportHeader)
@@ -29,7 +28,7 @@ set(photooftheday_provider_core_SRCS
 )
 
 add_library( photooftheday_providercore SHARED ${photooftheday_provider_core_SRCS} )
-target_link_libraries( photooftheday_providercore LINK_PUBLIC Qt5::Gui Qt5::Sql KF5::Plasma )
+target_link_libraries( photooftheday_providercore LINK_PUBLIC Qt5::Gui KF5::Plasma )
 set_target_properties( photooftheday_providercore PROPERTIES VERSION 1.0.0 SOVERSION 1 )
 
 install( TARGETS photooftheday_providercore ${INSTALL_TARGETS_DEFAULT_ARGS} )
