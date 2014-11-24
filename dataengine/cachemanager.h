@@ -26,6 +26,7 @@ private:
     CacheManager(const QString& pid);
     
     QString m_provider;
+    QString m_path;
 };
 
 #endif // CacheManager_H
