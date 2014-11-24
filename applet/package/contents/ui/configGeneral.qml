@@ -1,8 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.1 as QtControls
-// import QtQuick.Controls.Styles 1.1
 import QtQuick.Layouts 1.1 as QtLayouts
-import QtQuick.Dialogs 1.0
+import QtQuick.Dialogs 1.0 as QtDialogs
 
 // QtControls.GroupBox {
 Item {
@@ -15,12 +14,12 @@ Item {
     property alias cfg_showShadow: showShadowCheckBox.checked
     property alias cfg_shadowWidth: shadowWidthSpinBox.value
     property alias cfg_shadowSpread: shadowSpreadSpinBox.value
-    property color cfg_shadowColor: "black"
+    property color cfg_shadowColor
     
     property alias cfg_showBorder: showBorderCheckBox.checked
     property alias cfg_borderWidth: borderWidthSpinBox.value
     property alias cfg_borderOpacity: borderOpacitySpinBox.value
-    property color cfg_borderColor: "red"
+    property color cfg_borderColor
     
     property alias cfg_roundedCorners: roundedCornersSpinBox.value
     
@@ -80,22 +79,21 @@ Item {
                     iconName: "color-picker"
                     enabled: showShadowCheckBox.checked
                     
-//                         ColorDialog {
-//                             id: colorDialog
-//                             title: "Please choose a color"
-//                             visible: false
-//                             
-//                             onAccepted: {
-//                                 cfg_shadowColor = colorDialog.color
-//                                 close()
-//                             }
-//                             onRejected: {
-//                                 close()
-//                             }
-//                             Component.onCompleted: visible = true
-//                         }
-//                         
-//                         onClicked: { colorDialog.open() }
+                        QtDialogs.ColorDialog {
+                            id: colorDialog
+                            title: "Please choose a color"
+                            visible: false
+                            
+                            onAccepted: {
+                                cfg_shadowColor = colorDialog.color
+                                close()
+                            }
+                            onRejected: {
+                                close()
+                            }
+                        }
+                        
+                        onClicked: { colorDialog.open() }
                     
 //                         style: ButtonStyle {
 //                             background: Rectangle {

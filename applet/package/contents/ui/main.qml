@@ -15,6 +15,7 @@ Item {
     property bool showShadowCfg: Plasmoid.configuration.showShadow
     property int shadowWidthCfg: Plasmoid.configuration.shadowWidth
     property real shadowSpreadCfg: Plasmoid.configuration.shadowSpread
+    property color shadowColorCfg: Plasmoid.configuration.shadowColor
     
     property bool showBorderCfg: Plasmoid.configuration.showBorder
     property int borderWidthCfg: Plasmoid.configuration.borderWidth
@@ -85,7 +86,7 @@ Item {
         
         glowRadius: shadowWidthCfg
         spread: shadowSpreadCfg
-        color: "black"
+        color: shadowColorCfg
         cached: true //TODO: disable during transitions
         
         cornerRadius: border.radius + glowRadius
