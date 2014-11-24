@@ -46,6 +46,8 @@ public:
     
     void setDataStruct(QSharedPointer<Data> data) { m_data = data; };
     
+    inline void triggerUpdate() { checkForUpdate(); };
+    
 private:
     ProviderCore *m_provider;
     QSharedPointer<Data> m_data;

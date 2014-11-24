@@ -47,6 +47,8 @@ const QLatin1Literal cPageUrlKey("PageUrl");
 const QLatin1Literal cPrevPageUrlKey("PrevPageUrl");
 const QLatin1Literal cTitleKey("Title");
 
+const QLatin1Literal cErrorKey("Error");
+
 class PHOTOOFTHEDAY_EXPORT ProviderCore : public QObject
 {
     Q_OBJECT

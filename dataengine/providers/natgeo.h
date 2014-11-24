@@ -66,7 +66,7 @@ Q_SIGNALS:
     void finished( int result );
     
 private slots:
-    void onFiniched( int result );
+    void onFinished( int result );
     
 private:
     bool parseWebPage( const QByteArray & source );

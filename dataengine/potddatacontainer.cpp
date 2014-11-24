@@ -34,13 +34,13 @@ PotdDataContainer::PotdDataContainer(ProviderCore* provider, QObject* parent): D
 m_provider(provider)
 {
     Q_ASSERT(m_provider == nullptr);
-    
-    //TODO: start check for update???
    
     connect( this, &Plasma::DataContainer::updateRequested, [this](DataContainer *  source) {
         // request update from provider. This signal is emitted every time the polling interval expires.
         this->m_provider->checkForNewPhoto(this);
     } );
+    
+    m_provider->checkForNewPhoto(this);
 }
 
 PotdDataContainer::~PotdDataContainer()

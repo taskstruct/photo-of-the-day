@@ -35,6 +35,8 @@
 #include "potddatacontainer.h"
 #include "natgeo.h"
 
+#include <QDebug>
+
 K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-natgeo.json", NatGeoProvider )
 
 //===== helper function =====
@@ -74,11 +76,11 @@ static QString getTitle( const QByteArray &source )
 NatGeoProvider::NatGeoProvider(QObject *parent, const QVariantList &args):
 ProviderCore(parent, args)
 {
-    CacheManager *m_cache = CacheManager::create( QLatin1String("natgeo") );
+    m_cache = CacheManager::create( QLatin1String("natgeo") );
 }
 
 void NatGeoProvider::checkForNewPhoto(PotdDataContainer* dataContainer)
-{
+{   
     if( m_checker ) {
         // check is running. just register and wait to finish
         m_checker->registerDataContainer(dataContainer);
@@ -88,11 +90,6 @@ void NatGeoProvider::checkForNewPhoto(PotdDataContainer* dataContainer)
     m_checker = new DataFetcher(this);
     m_checker->registerDataContainer(dataContainer);
     m_checker->GetWebPage( QUrl( QLatin1Literal("http://photography.nationalgeographic.com/photography/photo-of-the-day/") ) );
-    
-//     connect( m_checker.data(), &DataFetcher::finished, [this](int result) {
-//         // delete object
-//         m_checker->deleteLater();
-//     } );
 }
 
 
@@ -100,23 +97,22 @@ void NatGeoProvider::checkForNewPhoto(PotdDataContainer* dataContainer)
 DataFetcher::DataFetcher( QObject *parent): QObject(parent),
 m_data( new Data )
 {
+    connect( this, &DataFetcher::finished, &DataFetcher::onFinished );
 }
 
 void DataFetcher::GetWebPage( const QUrl & url)
 {
-    //=================================================================================
-    m_data->canonicalUrl = QLatin1String("http://photography.nationalgeographic.com/photography/photo-of-the-day/");
-    m_data->cacheUrl = QLatin1String("/home/nikolay/Siberian-Tiger-Image.jpg");
-    m_data->title = QLatin1String("Siberian tiger");
-    m_data->photoUrl = QLatin1String("/home/nikolay/Siberian-Tiger-Image.jpg");
-    m_data->prevDayUrl = QString();
-    
-    emit finished(0);
-    return;
-    
-    //=================================================================================
-    
-    
+//     //=================================================================================
+//     m_data->canonicalUrl = QLatin1String("http://photography.nationalgeographic.com/photography/photo-of-the-day/");
+//     m_data->cacheUrl = QLatin1String("/home/nikolay/Siberian-Tiger-Image.jpg");
+//     m_data->title = QLatin1String("Siberian tiger");
+//     m_data->photoUrl = QLatin1String("/home/nikolay/Siberian-Tiger-Image.jpg");
+//     m_data->prevDayUrl = QString();
+//     
+//     emit finished(0);
+//     return;
+//     
+//     //=================================================================================
     
     m_data->canonicalUrl = url.toString();
     
@@ -135,7 +131,6 @@ void DataFetcher::GetWebPage( const QUrl & url)
             
             if( parseWebPage( stJob->data() ) )
             {
-                //TODO: Store in cache
                 GetImage();
             }
             else
@@ -166,10 +161,7 @@ void DataFetcher::GetImage()
             
             auto provider = qobject_cast<NatGeoProvider*>( parent() );
             
-            if( provider->cacheManager()->save( stJob->url().fileName(), stJob->data(), m_data->cacheUrl ) )
-            {
-            }
-            else
+            if( !provider->cacheManager()->save( stJob->url().fileName(), stJob->data(), m_data->cacheUrl ) )
             {
                 //TODO: When we don't use cache or save failed pass image URL to applet
                 m_data->cacheUrl = m_data->photoUrl;
@@ -222,15 +214,19 @@ bool DataFetcher::parseWebPage(const QByteArray& source)
     return true;   
 }
 
-void DataFetcher::onFiniched(int result)
+void DataFetcher::onFinished(int result)
 {
     if( result ) {
-        //TODO: set result to all registered data containers
+        for( PotdDataContainer* dc: m_associatedDataContainers ) {
+            dc->setData( cErrorKey, m_error );
+            dc->triggerUpdate();
+        }
+        
         return;
     }
     
-    for( PotdDataContainer* dc: m_associatedDataContainers ) {
-        
+    for( PotdDataContainer* dc: m_associatedDataContainers )
+    {
         // save data in case 
         dc->setDataStruct( m_data );
         
@@ -238,6 +234,9 @@ void DataFetcher::onFiniched(int result)
         dc->setData( cPageUrlKey, m_data->canonicalUrl );
         dc->setData( cPrevPageUrlKey, m_data->prevDayUrl );
         dc->setData( cTitleKey, m_data->title );
+        dc->setData( cErrorKey, QString() );
+        
+        dc->triggerUpdate();
     }
 }
 
