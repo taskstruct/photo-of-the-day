@@ -20,6 +20,7 @@ Item {
     property bool showBorderCfg: Plasmoid.configuration.showBorder
     property int borderWidthCfg: Plasmoid.configuration.borderWidth
     property real borderOpacityCfg: Plasmoid.configuration.borderOpacity
+    property color borderColorCfg: Plasmoid.configuration.borderColor
     
     property int roundedCornersCfg: Plasmoid.configuration.roundedCorners
     property bool animatedTransitionsCfg: Plasmoid.configuration.animatedTransitions
@@ -105,7 +106,7 @@ Item {
         visible: showBorderCfg
         
         border.width: borderWidthCfg
-        border.color: "red"
+        border.color: borderColorCfg
         
         anchors.fill: visualContent
         anchors.margins: showShadowCfg ? glowEffect.glowRadius : 0

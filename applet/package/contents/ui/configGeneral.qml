@@ -79,36 +79,21 @@ Item {
                     iconName: "color-picker"
                     enabled: showShadowCheckBox.checked
                     
-                        QtDialogs.ColorDialog {
-                            id: colorDialog
-                            title: "Please choose a color"
-                            visible: false
-                            
-                            onAccepted: {
-                                cfg_shadowColor = colorDialog.color
-                                close()
-                            }
-                            onRejected: {
-                                close()
-                            }
-                        }
+                    QtDialogs.ColorDialog {
+                        id: shadowColorDialog
+                        title: i18n("Please choose a color")
+                        visible: false
                         
-                        onClicked: { colorDialog.open() }
+                        onAccepted: {
+                            cfg_shadowColor = color
+                            close()
+                        }
+                        onRejected: {
+                            close()
+                        }
+                    }
                     
-//                         style: ButtonStyle {
-//                             background: Rectangle {
-//                                 implicitWidth: 100
-//                                 implicitHeight: 25
-//                                 border.width: control.activeFocus ? 2 : 1
-//                                 border.color: "#888"
-//                                 radius: 4
-//                                 gradient: Gradient {
-//                                     GradientStop { position: 0 ; color: control.pressed ? cfg_shadowColor : Qt.lighter(cfg_shadowColor) }
-//                                     GradientStop { position: 1 ; color: control.pressed ? cfg_shadowColor : Qt.darker(cfg_shadowColor) }
-//                                 }
-// //                                 color: cfg_shadowColor
-//                             }
-//                         }
+                    onClicked: { shadowColorDialog.open() }
                 }
             }
         }
@@ -162,6 +147,22 @@ Item {
                 QtControls.Button {
                     iconName: "color-picker"
                     enabled: showBorderCheckBox.checked
+                    
+                    QtDialogs.ColorDialog {
+                        id: borderColorDialog
+                        title: i18n("Please choose a color")
+                        visible: false
+                        
+                        onAccepted: {
+                            cfg_borderColor = color
+                            close()
+                        }
+                        onRejected: {
+                            close()
+                        }
+                    }
+                    
+                    onClicked: { borderColorDialog.open() }
                 }
             }
         }
