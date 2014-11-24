@@ -55,7 +55,6 @@ public:
     //TODO: heck if parent can be default param
     ProviderCore(QObject* parent = 0, const QVariantList& args = QVariantList() );
     
-    virtual void requestPhoto(const QString& source, int offset = 0) = 0; //TODO: may be for remove
     virtual void checkForNewPhoto(PotdDataContainer* dataContainer) = 0;
         
     inline void addref() { ++m_refcount; };

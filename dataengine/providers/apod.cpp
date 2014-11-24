@@ -45,49 +45,6 @@ ProviderCore(parent, args)
     // create cache if does not exists
 }
 
-void ApodProvider::requestPhoto(const QString& source, int offset)
-{   
-    // calculate download url
-    QString newUrl;
-    
-    if( 0 == offset  )
-    {
-        // download todays photo
-        newUrl = QLatin1String("http://photography.nationalgeographic.com/photography/photo-of-the-day/");
-    }
-    else
-    {
-        //TODO: In 2.0
-    }
-    
-    //TODO: check in cache
-    
-    //TODO: check if fetch is running
-    
-    m_fetcher = new DataFetcher(this);
-    
-    connect( m_fetcher, &DataFetcher::finished, [&](int result) {
-        if( 0 == result ) {
-            Plasma::DataEngine::Data d;
-            
-            d.insert( cPhotoKey, m_fetcher->m_data.cacheUrl );
-            d.insert( cPageUrlKey, m_fetcher->m_data.canonicalUrl );
-            d.insert( cPrevPageUrlKey, m_fetcher->m_data.prevDayUrl );
-            d.insert( cTitleKey, m_fetcher->m_data.title );
-            
-            emit photoReady(source, d);
-        }
-        else {
-            //TODO: Handle error
-        }
-        
-        m_fetcher->deleteLater();
-        m_fetcher = Q_NULLPTR;
-    } );
-    
-    m_fetcher->GetWebPage( newUrl );
-}
-
 //====== DataFetcher =====
 DataFetcher::DataFetcher( QObject *parent): QObject(parent)
 {

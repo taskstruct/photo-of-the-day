@@ -90,7 +90,6 @@ public:
     explicit NatGeoProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
     virtual ~NatGeoProvider() { delete m_cache; m_cache = Q_NULLPTR; }
     
-    void requestPhoto(const QString& source, int offset = 0);
     void checkForNewPhoto(PotdDataContainer* dataContainer);
     
     inline CacheManager *cacheManager() const { return m_cache; }

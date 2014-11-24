@@ -77,68 +77,6 @@ ProviderCore(parent, args)
     CacheManager *m_cache = CacheManager::create( QLatin1String("natgeo") );
 }
 
-void NatGeoProvider::requestPhoto(const QString &source, int offset)
-{   
-    // calculate download url
-    QString newUrl;
-    
-    if( 0 == offset  )
-    {
-        // download todays photo
-        newUrl = QLatin1String("http://photography.nationalgeographic.com/photography/photo-of-the-day/");
-        
-        //
-    }
-    else
-    {
-        //TODO: In 2.0
-        //TODO: check in cache "SELECT * FROM natgeo WHERE canonicalUrl = " 
-    }
-    
-    //TODO: check if fetch is running
-    for( auto df: m_fetchers )
-    {
-        if( newUrl == df->m_data->canonicalUrl )
-        {
-            df->m_associatedSources.append(source);
-            return;
-        }
-    }
-    
-    // we need new fetcher for this URL
-    DataFetcher *newDF = new DataFetcher(this);
-    m_fetchers.append(newDF);
-        
-    connect( newDF, &DataFetcher::finished, [this](int result) {
-        auto df = qobject_cast<DataFetcher*>( sender() );
-        Q_ASSERT( df != Q_NULLPTR );
-        
-        if( 0 == result )
-        {    
-            for( const QString& s: df->m_associatedSources )
-            {
-                Plasma::DataEngine::Data d;
-                
-                d.insert( cPhotoKey, df->m_data->cacheUrl );
-                d.insert( cPageUrlKey, df->m_data->canonicalUrl );
-                d.insert( cPrevPageUrlKey, df->m_data->prevDayUrl );
-                d.insert( cTitleKey, df->m_data->title );
-                
-                emit photoReady(s, d);
-            }
-        }
-        else {
-            //TODO: Handle error
-        }
-        
-        m_fetchers.removeOne(df);
-        df->deleteLater();
-        
-    } );
-    
-    newDF->GetWebPage( newUrl );
-}
-
 void NatGeoProvider::checkForNewPhoto(PotdDataContainer* dataContainer)
 {
     if( m_checker ) {
