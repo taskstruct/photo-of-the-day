@@ -47,6 +47,8 @@ Item {
             _providerSource = selectedProviderCfg + ":" + plasmoid.id;
             
             potdEngine.connectSource( _providerSource )
+        
+            Plasmoid.busy = true;
         }   
     }
     
@@ -83,7 +85,6 @@ Item {
         id: glowEffect
         
         anchors.fill: visualContent
-        anchors.margins: glowRadius
         
         glowRadius: shadowWidthCfg
         spread: shadowSpreadCfg
@@ -109,7 +110,6 @@ Item {
         border.color: borderColorCfg
         
         anchors.fill: visualContent
-        anchors.margins: showShadowCfg ? glowEffect.glowRadius : 0
     }
     
     ImageEffect {
@@ -118,7 +118,8 @@ Item {
         
         frontSource: "/home/nikolay/Свалени/walls/wallpaper-3032560.jpg"
         
-        anchors.fill: maskRect        
+        anchors.fill: border   
+        anchors.margins: border.border.width
     }
     
     Rectangle {
@@ -126,11 +127,9 @@ Item {
         
         color: "#FF0000"
         
-        radius: border.radius - border.border.width
+        radius: roundedCornersCfg - borderWidthCfg
         
-        visible: false
-        
-        anchors.fill: border
+        anchors.fill: parent
         anchors.margins: border.border.width
     }
     
@@ -147,7 +146,9 @@ Item {
             
             enabled: selectedProviderCfg.length != 0
             
-            onClicked: {                
+            onClicked: {      
+                Plasmoid.busy = true
+                
                 var keys = Object.keys(potdEngine.data["Providers"])
                 
                 // find provider position
@@ -179,7 +180,9 @@ Item {
             
             enabled: selectedProviderCfg.length != 0
             
-            onClicked: {                
+            onClicked: {       
+                Plasmoid.busy = true
+                
                 var keys = Object.keys(potdEngine.data["Providers"])
                 
                 // find provider position
@@ -225,6 +228,7 @@ Item {
             console.debug( "onNewData " + sourceName )
             
             if( _providerSource == sourceName ) {
+                Plasmoid.busy = false
                 
                 imageEffect.frontSource = data.Photo
                 plasmoid.toolTipMainText = data.Title

@@ -3,7 +3,7 @@ import QtQuick 2.0
 ShaderEffect {
     id: effect
     
-    blending: false
+//     blending: false
     
     property bool flip: false
     property real amount: 0.0
@@ -92,25 +92,23 @@ ShaderEffect {
         void main()
         {
             lowp vec4 texm = texture2D(mImg, qt_TexCoord0);
+            lowp float maskOp = texm.a;
             
-            if( texm.a == 0.0 )
+            if( texm.b == 1.0 ) {
+                // pixel is under border. Also clip it
+                maskOp = 0.0;
+            }
+            
+            if( amount == 0.0 ) 
             {
-                // under border or outside rounded corner
-                gl_FragColor = vec4( 0.0, 0.0, 0.0, 0.0 );
+                gl_FragColor = texture2D(fImg, qt_TexCoord0.st) * maskOp * qt_Opacity;
             }
             else
             {
-                if( amount == 0.0 ) 
-                {
-                    gl_FragColor = vec4( texture2D(fImg, qt_TexCoord0).rgb, texm.a) * qt_Opacity;
-                }
-                else
-                {
-                    lowp vec4 tex1 = texture2D(fImg, qt_TexCoord0);
-                    lowp vec4 tex2 = texture2D(bImg, qt_TexCoord0);
-                    
-                    gl_FragColor = vec4( (tex1.rgb * (1.0 - amount) + tex2.rgb * amount ) , texm.a) * qt_Opacity;
-                }
+                lowp vec4 tex1 = texture2D(fImg, qt_TexCoord0.st);
+                lowp vec4 tex2 = texture2D(bImg, qt_TexCoord0.st);
+                
+                gl_FragColor = ( tex1* (1.0 - amount) + tex2 * amount ) * maskOp * qt_Opacity;
             }
     }"
     
