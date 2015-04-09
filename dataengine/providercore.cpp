@@ -33,4 +33,12 @@ ProviderCore::ProviderCore(QObject *parent, const QVariantList &args):
 {
 }
 
+void ProviderCore::unregisterContainer() {
+    --m_use_count;
+
+    if(!m_use_count) {
+        emit unused();
+    }
+}
+
 #include "providercore.moc"

@@ -9,7 +9,13 @@
 #include "potddatacontainer.h"
 #include "photooftheday.h"
 
-K_EXPORT_PLASMA_DATAENGINE_WITH_JSON(photooftheday, PhotoOfTheDay, "plasma-dataengine-photooftheday.json")
+K_EXPORT_PLASMA_DATAENGINE_WITH_JSON(photooftheday, PhotoOfTheDay, "plasma-dataengine-photooftheday.json");
+
+static constexpr QLatin1String _providersSourceName("Providers");
+
+inline const QString providerFromSource(const QString &source) {
+    return source.split(':').at(0);
+}
 
 PhotoOfTheDay::PhotoOfTheDay(QObject* parent, const QVariantList& args): Plasma::DataEngine(parent, args)
 {    
@@ -19,12 +25,12 @@ PhotoOfTheDay::PhotoOfTheDay(QObject* parent, const QVariantList& args): Plasma:
     for( const KService::Ptr &service: services )
     {
         const QString provider = service->property(QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" ), QVariant::String).toString();
-        m_providers.insert(provider, service);
-        setData( QLatin1String( "Providers"), provider, service->name() );
+        m_availableProviders.insert(provider, service);
+        setData( _providersSourceName, provider, service->name() );
     }
     
     if( services.isEmpty() ) {
-        setData( QLatin1String( "Providers" ), Plasma::DataEngine::Data() );
+        setData( _providersSourceName, Plasma::DataEngine::Data() );
     }
     
     //TODO: Listen for changes with void KSycoca::databaseChanged (   const QStringList &     changedResources    )   
@@ -65,17 +71,19 @@ ProviderCore* PhotoOfTheDay::providerForSource(const QString& source)
     
     const QString provider = source.split(':').at(0);
     
-    if( provider.isEmpty() ) {
+    if( provider.isEmpty() )
+    {
         qDebug() << "Invalid source name: " << source;
-        return Q_NULLPTR;
+        return instance;
     }
     
     if( m_instances.contains(provider) )
     {
         instance = m_instances.value(provider);
-        instance->addref();
+        return instance;
     }
-    else if( m_providers.contains(provider) )
+
+    if( m_availableProviders.contains(provider) )
     {
         // create instance
         
@@ -83,29 +91,35 @@ ProviderCore* PhotoOfTheDay::providerForSource(const QString& source)
         
         QString error;
         
-        instance = m_providers[provider]->createInstance<ProviderCore>( this, QVariantList(), &error );
+        instance = m_availableProviders[provider]->createInstance<ProviderCore>( this, QVariantList(), &error );
         
         if( nullptr == instance ) {
-            qDebug() << "Unable to create instance of " << m_providers[provider]->library() << " because " << error;
+            qDebug() << "Unable to create instance of " << m_availableProviders[provider]->library() << " because " << error;
             return Q_NULLPTR;
         }
         
         m_instances.insert( provider, instance );
+
+        connect( instance, &ProviderCore::unused, [this]() {
+            auto provider = sender();
+
+            auto iter = this->m_instances.begin();
+            auto last = this->m_instances.end();
+
+            while( iter != last ) {
+                if( iter.value() == provider ) {
+                    iter.value()->deleteLater();
+                    this->m_instances.erase(iter);
+                    break;
+                }
+
+                ++iter;
+            }
+
+        } );
     }
     
     return instance;
-}
-
-void PhotoOfTheDay::unregisterProvider(const QString& source)
-{
-    const QString provider = source.split(':').at(0);
-    
-    auto pr = m_instances.value(provider);
-    pr->deref();
-    
-    if(pr->refcount() == 0) {
-        m_instances.remove(provider);
-    }
 }
 
 

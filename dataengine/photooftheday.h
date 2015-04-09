@@ -11,8 +11,6 @@ class PhotoOfTheDay: public Plasma::DataEngine
     
 public:
     PhotoOfTheDay(QObject* parent, const QVariantList& args);
-    
-    void unregisterProvider(const QString& source);
         
 protected:
     bool sourceRequestEvent( const QString &identifier );
@@ -21,7 +19,7 @@ protected:
 private:
     ProviderCore* providerForSource(const QString& source);
     
-    QHash<QString, KService::Ptr> m_providers;
+    QHash<QString, KService::Ptr> m_availableProviders;
     
     ///@brief 
     QHash<QString, ProviderCore*> m_instances;

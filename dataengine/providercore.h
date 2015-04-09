@@ -54,23 +54,24 @@ class PHOTOOFTHEDAY_EXPORT ProviderCore : public QObject
     Q_OBJECT
 
 public:
-    //TODO: heck if parent can be default param
+    //TODO: check if parent can be default param
     ProviderCore(QObject* parent = 0, const QVariantList& args = QVariantList() );
     
     virtual void checkForNewPhoto(PotdDataContainer* dataContainer) = 0;
         
-    inline void addref() { ++m_refcount; };
-    inline void deref() { --m_refcount; };
-    inline int refcount() const { return m_refcount; };
+    inline void registerContainer() { ++m_use_count; }
+    void unregisterContainer();
     
 Q_SIGNALS:
     void photoReady(const QString& source, const Plasma::DataEngine::Data& data);
+
+    void unused();
 
 private:
     
     inline Plasma::DataEngine* dataEngine() { return qobject_cast<Plasma::DataEngine*>( parent() ); }
     
-    int m_refcount;
+    int m_use_count = 0;
 };
 
 

@@ -34,6 +34,8 @@ PotdDataContainer::PotdDataContainer(ProviderCore* provider, QObject* parent): D
 m_provider(provider)
 {
     Q_ASSERT(m_provider == nullptr);
+
+    m_provider->registerContainer();
    
     connect( this, &Plasma::DataContainer::updateRequested, [this](DataContainer *  source) {
         // request update from provider. This signal is emitted every time the polling interval expires.
@@ -45,7 +47,6 @@ m_provider(provider)
 
 PotdDataContainer::~PotdDataContainer()
 {
-    auto de = qobject_cast<PhotoOfTheDay*>( getDataEngine() );    
-    de->unregisterProvider(objectName());
+    m_provider->unregisterContainer();
 }
 
