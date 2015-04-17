@@ -9,7 +9,7 @@ include(GenerateExportHeader)
 
 set( plasma_engine_photooftheday_SRCS photooftheday.cpp potddatacontainer.cpp )
 
-kservice_desktop_to_json(plasma_engine_photooftheday plasma-dataengine-photooftheday.desktop)
+kcoreaddons_desktop_to_json(plasma_engine_photooftheday plasma-dataengine-photooftheday.desktop)
 
 add_library(plasma_engine_photooftheday MODULE ${plasma_engine_photooftheday_SRCS})
 

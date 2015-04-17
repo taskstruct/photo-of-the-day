@@ -4,7 +4,7 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS KIO I18n CoreAddons)
 
 set( natgeo_SRCS natgeo.cpp )
 
-kservice_desktop_to_json(photooftheday_provider_natgeo photooftheday-provider-natgeo.desktop)
+kcoreaddons_desktop_to_json(photooftheday_provider_natgeo photooftheday-provider-natgeo.desktop)
 
 add_library(photooftheday_provider_natgeo MODULE ${natgeo_SRCS})
 
@@ -18,7 +18,7 @@ install(FILES photooftheday-provider-natgeo.desktop DESTINATION ${SERVICES_INSTA
 
 set( apod_SRCS apod.cpp )
 
-kservice_desktop_to_json(photooftheday_provider_apod photooftheday-provider-apod.desktop)
+kcoreaddons_desktop_to_json(photooftheday_provider_apod photooftheday-provider-apod.desktop)
 
 add_library(photooftheday_provider_apod MODULE ${apod_SRCS})
 
