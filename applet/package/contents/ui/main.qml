@@ -3,14 +3,14 @@ import QtGraphicalEffects 1.0
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 2.0 as PlasmaComponents
+
+import org.task_struct.private.photooftheday 1.0
  
 Item {
     id: rootItem
     
     width: 400
     height: 400
-//     implicitWidth: 400
-//     implicitHeight: 400
     
     property bool showShadowCfg: Plasmoid.configuration.showShadow
     property int shadowWidthCfg: Plasmoid.configuration.shadowWidth
@@ -30,16 +30,87 @@ Item {
     property int __animationsDuration: 1000
     
     property string _providerSource: ""
+
+    signal newSizeUpdated( size newSize)
+
+    property Image photo: Image {
+
+        property bool updated: false
+
+        onImplicitWidthChanged: {
+            console.debug( "Photo.implicitWidth = ", implicitWidth )
+
+            if(updated) {
+                rootItem.calcNewSize()
+                updated = false;
+            }
+            else {
+                updated = true;
+            }
+        }
+
+        onImplicitHeightChanged: {
+            console.debug( "Photo.implicitHeight = ", implicitHeight )
+
+            if(updated) {
+                rootItem.calcNewSize()
+                updated = false;
+            }
+            else {
+                updated = true;
+            }
+        }
+
+        onStateChanged: console.debug("Photo.state = ", state )
+
+        onSourceSizeChanged: console.debug("Photo.sourceSize = ", sourceSize)
+    }
+
+    property Image photoBuffer: Image {
+
+
+    }
     
     Plasmoid.backgroundHints: Plasmoid.NoBackground
 //     Plasmoid.aspectRatioMode: Plasmoid.Square NOTE: Not implemented in KF5...
     
     Component.onCompleted: {
         console.debug( "Component.onCompleted" )
-        Plasmoid.setConfigurationRequired( selectedProviderCfg.length == 0, i18n("No provider is specified") )
+        plasmoid.setConfigurationRequired( selectedProviderCfg.length == 0, i18n("No provider is specified") )
 //         plasmoid.setConfigurationRequired( selectedProviderCfg.length == 0, i18n("No provider is specified") )
         
 //         Plasmoid.aspectRatioMode = Plasmoid.KeepAspectRatio
+
+//        console.debug("Plasmoid object dump:")
+//        for( var key in plasmoid ) {
+//            console.debug( key," = ", plasmoid[key] )
+//        }
+
+//        console.debug("Plasmoid.nativeInterface object dump:")
+//        for( key in plasmoid.nativeInterface ) {
+//            console.debug( key," = ", plasmoid[key] )
+//        }
+    }
+
+    function calcNewSize() {
+        var maxSize = Math.max( plasmoid.width, plasmoid.height )
+
+        console.debug("Plasmoid size is ", Qt.size( plasmoid.width, plasmoid.height ) )
+
+        var newSize = Qt.size( 0, 0 )
+
+        if( photo.implicitWidth >= photo.implicitHeight ) {
+            newSize.width = maxSize
+            newSize.height = maxSize * ( photo.implicitHeight / photo.implicitWidth )
+        }
+        else {
+            newSize.height = maxSize
+            newSize.width = maxSize * ( photo.implicitWidth / photo.implicitHeight )
+        }
+
+        console.debug("New plasmoid size is ", newSize)
+
+        newSizeUpdated(newSize)
     }
     
     onSelectedProviderCfgChanged: {
@@ -51,49 +122,38 @@ Item {
             Plasmoid.busy = true;
         }   
     }
-    
-    Item {
-        id: visualContent
-        
-        width: if( imageEffect.aspectRatio > 1.0 ) {
-            return plasmoid.width
-        } else {
-            return plasmoid.width * imageEffect.aspectRatio
-        }
-        
-        height: if( imageEffect.aspectRatio > 1.0 ) {
-            return plasmoid.height / imageEffect.aspectRatio 
-        } else {
-            return plasmoid.height
-        }
-        
-        anchors.top: parent.top
-        anchors.left: parent.left
-        
-        Behavior on width {
-            enabled: animatedTransitionsCfg /*imageEffect.running*/
-            NumberAnimation { duration: __animationsDuration }
-        }
-        
-        Behavior on height {
-            enabled: animatedTransitionsCfg /*imageEffect.running*/
-            NumberAnimation { duration: __animationsDuration }
-        }
+
+    onNewSizeUpdated: {
+//        if( !animatedTransitionsCfg ) {
+            plasmoid.width = newSize.width
+            plasmoid.height = newSize.height
+//        }
+    }
+
+    Behavior on Plasmoid.width {
+        NumberAnimation { duration: __animationsDuration }
+    }
+
+    Behavior on Plasmoid.height {
+        NumberAnimation { duration: __animationsDuration }
     }
     
-    RectangularGlow {
-        id: glowEffect
-        
-        anchors.fill: visualContent
-        
-        glowRadius: shadowWidthCfg
-        spread: shadowSpreadCfg
-        color: shadowColorCfg
-        cached: true //TODO: disable during transitions
-        
-        cornerRadius: border.radius + glowRadius
-        
+    BorderImage {
+        id: shadow
+
+        // color/size/strength
+        source: "image://shadow/" + shadowColorCfg+ "/" + shadowWidthCfg + "/" + shadowSpreadCfg
+
         visible: showShadowCfg
+
+        border {
+            left: shadowWidthCfg
+            right: shadowWidthCfg
+            top: shadowWidthCfg
+            bottom: shadowWidthCfg
+        }
+
+        anchors.fill: parent
     }
     
     Rectangle {
@@ -106,10 +166,11 @@ Item {
         
         visible: showBorderCfg
         
-        border.width: borderWidthCfg
-        border.color: borderColorCfg
+        border.width: showBorderCfg ? borderWidthCfg : 1
+        border.color: showBorderCfg ? borderColorCfg: "black"
         
-        anchors.fill: visualContent
+        anchors.fill: showShadowCfg ? shadow : parent
+        anchors.margins: showShadowCfg ? shadowWidthCfg : 0
     }
     
     ImageEffect {
@@ -154,7 +215,7 @@ Item {
                 // find provider position
                 var i;
                 for( i = 0; i < keys.length; ++i ) {
-                    if( keys[i] == selectedProviderCfg ) {
+                    if( keys[i] === selectedProviderCfg ) {
                         console.debug( "Provider found: " + keys[i] + " at " + i );
                         break;
                     }
@@ -188,7 +249,7 @@ Item {
                 // find provider position
                 var i;
                 for( i = 0; i < keys.length; ++i ) {
-                    if( keys[i] == selectedProviderCfg ) {
+                    if( keys[i] === selectedProviderCfg ) {
                         console.debug( "Provider found: " + keys[i] + " at " + i );
                         break;
                     }
@@ -196,7 +257,7 @@ Item {
                 
                 ++i; // go to next
                 
-                if( i == keys.length ) {
+                if( i === keys.length ) {
                     // current provider is the last one. Go to first
                     i = 0;
                 }
@@ -211,6 +272,10 @@ Item {
         
         PlasmaComponents.ToolButton {
             iconSource: "go-home"
+
+            onClicked: {
+                photo.source = "/home/nikolay/Свалени/walls/1509102.jpg"
+            }
         }
     }
     
@@ -228,12 +293,13 @@ Item {
             console.debug( "onNewData " + sourceName )
             
             if( _providerSource == sourceName ) {
-                Plasmoid.busy = false
+
+                plasmoid.busy = false
                 
-                imageEffect.frontSource = data.Photo
+                photo.source = data.Photo
+
                 plasmoid.toolTipMainText = data.Title
                 
-                dbg.text = data.Title
             }
         }
     }
