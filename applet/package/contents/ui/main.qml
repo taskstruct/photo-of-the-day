@@ -1,8 +1,7 @@
 import QtQuick 2.0
-import QtGraphicalEffects 1.0
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
-import org.kde.plasma.components 2.0 as PlasmaComponents
+
 
 import org.task_struct.private.photooftheday 1.0
  
@@ -12,6 +11,7 @@ Item {
     width: 400
     height: 400
     
+    // Configuration
     property bool showShadowCfg: Plasmoid.configuration.showShadow
     property int shadowWidthCfg: Plasmoid.configuration.shadowWidth
     property real shadowSpreadCfg: Plasmoid.configuration.shadowSpread
@@ -25,17 +25,25 @@ Item {
     property int roundedCornersCfg: Plasmoid.configuration.roundedCorners
     property bool animatedTransitionsCfg: Plasmoid.configuration.animatedTransitions
     
+    // logic
     property string selectedProviderCfg: Plasmoid.configuration.selectedProvider
+    property real _strenght: 0.0
     
-    property int __animationsDuration: 1000
+    // constants
+    readonly property int __animationsDuration: 2000
     
     property string _providerSource: ""
 
     signal newSizeUpdated( size newSize)
 
-    property Image photo: Image {
+    Image {
+        id: photo
 
         property bool updated: false
+
+        visible: false
+        layer.enabled: true;
+        layer.smooth: true
 
         onImplicitWidthChanged: {
             console.debug( "Photo.implicitWidth = ", implicitWidth )
@@ -66,9 +74,26 @@ Item {
         onSourceSizeChanged: console.debug("Photo.sourceSize = ", sourceSize)
     }
 
-    property Image photoBuffer: Image {
+    Image {
+        id: photoBuffer
+        visible: false
+        layer.enabled: true;
+        layer.smooth: true
+    }
 
+    Rectangle {
+        id: blank
 
+        color: palette.window
+        width: 1; height: 1
+        visible: false
+        layer.enabled: true;
+        layer.smooth: true
+
+        SystemPalette {
+            id: palette;
+            colorGroup: SystemPalette.Active
+        }
     }
     
     Plasmoid.backgroundHints: Plasmoid.NoBackground
@@ -76,7 +101,7 @@ Item {
     
     Component.onCompleted: {
         console.debug( "Component.onCompleted" )
-        plasmoid.setConfigurationRequired( selectedProviderCfg.length == 0, i18n("No provider is specified") )
+        plasmoid.setConfigurationRequired( selectedProviderCfg === "", i18n("No provider is specified") )
 //         plasmoid.setConfigurationRequired( selectedProviderCfg.length == 0, i18n("No provider is specified") )
         
 //         Plasmoid.aspectRatioMode = Plasmoid.KeepAspectRatio
@@ -90,6 +115,8 @@ Item {
 //        for( key in plasmoid.nativeInterface ) {
 //            console.debug( key," = ", plasmoid[key] )
 //        }
+
+//        photo.source = "/home/nikolay/Свалени/walls/wallpaper-3032560.jpg"
     }
 
     function calcNewSize() {
@@ -124,33 +151,32 @@ Item {
     }
 
     onNewSizeUpdated: {
-//        if( !animatedTransitionsCfg ) {
+        if( !animatedTransitionsCfg ) {
             plasmoid.width = newSize.width
             plasmoid.height = newSize.height
-//        }
+        } else {
+            plasmoidWidthAnim.to = newSize.width
+            plasmoidHeightAnim.to = newSize.height
+
+            transitionAnimation.start()
+        }
     }
 
-    Behavior on Plasmoid.width {
-        NumberAnimation { duration: __animationsDuration }
-    }
-
-    Behavior on Plasmoid.height {
-        NumberAnimation { duration: __animationsDuration }
-    }
-    
     BorderImage {
         id: shadow
 
         // color/size/strength
-        source: "image://shadow/" + shadowColorCfg+ "/" + shadowWidthCfg + "/" + shadowSpreadCfg
+        source: "image://shadow/" + shadowColorCfg+ "/" + shadowWidthCfg + "/" + roundedCornersCfg + "/" + shadowSpreadCfg
 
         visible: showShadowCfg
 
+        property int borderWidth: Math.max( shadowWidthCfg + roundedCornersCfg )
+
         border {
-            left: shadowWidthCfg
-            right: shadowWidthCfg
-            top: shadowWidthCfg
-            bottom: shadowWidthCfg
+            left: borderWidth
+            right: borderWidth
+            top: borderWidth
+            bottom: borderWidth
         }
 
         anchors.fill: parent
@@ -161,121 +187,68 @@ Item {
         
         color: "transparent"
         
-        opacity: borderOpacityCfg
+        opacity: showBorderCfg ? borderOpacityCfg : 1.0
+
         radius: roundedCornersCfg
-        
-        visible: showBorderCfg
+
+        onRadiusChanged: console.debug("Border radius is", radius)
         
         border.width: showBorderCfg ? borderWidthCfg : 1
-        border.color: showBorderCfg ? borderColorCfg: "black"
+        border.color: showBorderCfg ? borderColorCfg : "black"
         
         anchors.fill: showShadowCfg ? shadow : parent
         anchors.margins: showShadowCfg ? shadowWidthCfg : 0
     }
     
-    ImageEffect {
-        id: imageEffect
-        mask: maskRect
-        
-        frontSource: "/home/nikolay/Свалени/walls/wallpaper-3032560.jpg"
-        
-        anchors.fill: border   
-        anchors.margins: border.border.width
-    }
-    
     Rectangle {
-        id: maskRect
-        
-        color: "#FF0000"
-        
-        radius: roundedCornersCfg - borderWidthCfg
-        
-        anchors.fill: parent
-        anchors.margins: border.border.width
-    }
-    
-    PlasmaComponents.ButtonRow {
-        
-        id: buttons
-                
-        anchors.right: imageEffect.right
-        anchors.bottom: imageEffect.bottom
-        anchors.margins: 5
-        
-        PlasmaComponents.ToolButton {
-            iconSource: "go-previous"
-            
-            enabled: selectedProviderCfg.length != 0
-            
-            onClicked: {      
-                Plasmoid.busy = true
-                
-                var keys = Object.keys(potdEngine.data["Providers"])
-                
-                // find provider position
-                var i;
-                for( i = 0; i < keys.length; ++i ) {
-                    if( keys[i] === selectedProviderCfg ) {
-                        console.debug( "Provider found: " + keys[i] + " at " + i );
-                        break;
-                    }
-                }
-                
-                --i; // go to next
-                
-                if( i < 0 ) {
-                    // current provider is the first one. Go to last
-                    i = keys.length - 1;
-                }
-                
-                // remove old one
-                potdEngine.disconnectSource( selectedProviderCfg + ":" + plasmoid.id )
-                
-                console.debug( "New provider is: " + keys[i] + " at " + i )
-                selectedProviderCfg = keys[i]
-            }
-        }
-        
-        PlasmaComponents.ToolButton {
-            iconSource: "go-next"
-            
-            enabled: selectedProviderCfg.length != 0
-            
-            onClicked: {       
-                Plasmoid.busy = true
-                
-                var keys = Object.keys(potdEngine.data["Providers"])
-                
-                // find provider position
-                var i;
-                for( i = 0; i < keys.length; ++i ) {
-                    if( keys[i] === selectedProviderCfg ) {
-                        console.debug( "Provider found: " + keys[i] + " at " + i );
-                        break;
-                    }
-                }
-                
-                ++i; // go to next
-                
-                if( i === keys.length ) {
-                    // current provider is the last one. Go to first
-                    i = 0;
-                }
-                
-                // remove old one
-                potdEngine.disconnectSource( selectedProviderCfg + ":" + plasmoid.id )
-                
-                console.debug( "New provider is: " + keys[i] + " at " + i )
-                selectedProviderCfg = keys[i]
-            }
-        }
-        
-        PlasmaComponents.ToolButton {
-            iconSource: "go-home"
+        id: photoItem
 
-            onClicked: {
-                photo.source = "/home/nikolay/Свалени/walls/1509102.jpg"
-            }
+        color: "white"
+        radius: border.radius - border.border.width //TODO if border is disabled than get from shadow and than global
+        
+        anchors.fill: border
+        anchors.margins: border.border.width
+
+        layer.enabled: true
+        layer.effect: ShaderEffect {
+            id: shaderEffect
+
+            property var photoSource: photo.source != "" ? photo : blank
+            property var prevSource: photoBuffer.source != "" ? photoBuffer : blank
+            property real strenght: rootItem._strenght
+
+            fragmentShader: "
+                    uniform lowp sampler2D source; // this item used as mask
+                    uniform lowp sampler2D photoSource; // photo item
+                    uniform lowp sampler2D prevSource; // previous photo
+                    uniform lowp float strenght;
+                    uniform lowp float qt_Opacity; // inherited opacity of this item
+                    varying highp vec2 qt_TexCoord0;
+                    void main() {
+                        lowp vec4 m = texture2D(source, qt_TexCoord0);
+                        lowp vec4 s = texture2D(photoSource, qt_TexCoord0);
+                        lowp vec4 d = texture2D(prevSource, qt_TexCoord0);
+
+                        lowp vec4 mixed = s * ( 1.0 - strenght ) + d * strenght;
+
+                        gl_FragColor = mixed * m.a * qt_Opacity;
+                    }"
+        }
+    }
+
+    MouseArea {
+        id: appletArea
+
+        anchors.fill: parent
+
+        hoverEnabled: true
+        preventStealing: false
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+
+        ButtonBar {
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: photoItem.x + 2
         }
     }
     
@@ -296,11 +269,41 @@ Item {
 
                 plasmoid.busy = false
                 
+                // set current image as back
+                photoBuffer.source = photo.source
+
+                // load new image
                 photo.source = data.Photo
 
                 plasmoid.toolTipMainText = data.Title
                 
             }
         }
+    }
+
+    ParallelAnimation {
+        id: transitionAnimation
+
+        NumberAnimation {
+            id: plasmoidWidthAnim
+            target: plasmoid
+            property: "width"
+            duration: __animationsDuration
+        }
+
+        NumberAnimation {
+            id: plasmoidHeightAnim
+            target: plasmoid
+            property: "height"
+            duration: __animationsDuration
+        }
+
+        NumberAnimation {
+            target: rootItem
+            property: "_strenght"
+            duration: __animationsDuration
+            from: 1.0; to: 0.0
+        }
+
     }
 }
