@@ -26,25 +26,26 @@
  *
  */
 
-#ifndef APODPROVIDER_H
-#define APODPROVIDER_H
+#ifndef INTERFACELIFTPROVIDER_H
+#define INTERFACELIFTPROVIDER_H
 
 #include "providercore.h"
 
-class ApodProvider : public ProviderCore
+class InterfaceliftProvider : public ProviderCore
 {
     Q_OBJECT
 
 public:
-    ApodProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
+    explicit InterfaceliftProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
+    ~InterfaceliftProvider() = default;
     
     void checkForNewPhoto();
-    
+
 public Q_SLOTS:
     void onImageDownloaded();
-
+    
 private:
     void parseWebPage( const QByteArray & source );
 };
 
-#endif // APODPROVIDER_H
+#endif // INTERFACELIFTPROVIDER_H

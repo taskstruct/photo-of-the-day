@@ -26,55 +26,34 @@
  *
  */
 
-#include <QtCore/QSettings>
-
 #include <KI18n/KLocalizedString>
 
 #include <KCoreAddons/KJob>
 #include <KIO/Job>
 #include <KIO/StoredTransferJob>
 
-#include "apod.h"
+#include "interfacelift.h"
 
 #include <QDebug>
 
-K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-apod.json", ApodProvider )
-
-//===== helper function =====
-static QString getTitle( const QString& data )
-{
-    QString title = QLatin1String("Astronomy Picture of the Day");
-
-    const QString pattern = QLatin1String("<center>\n<b>(.*?)</b>");
-    QRegExp regExp;
-    regExp.setMinimal(true);
-    regExp.setPattern( pattern );
-
-    if( regExp.indexIn( data ) == -1 ) {
-        title = regExp.cap(1);
-    }
-
-    return title;
-}
+K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-interfacelift.json", InterfaceliftProvider )
 
 //==========
-ApodProvider::ApodProvider(QObject *parent, const QVariantList &args):
+InterfaceliftProvider::InterfaceliftProvider(QObject *parent, const QVariantList &args):
 ProviderCore(parent, args)
 {
-    connect( this, &ApodProvider::photoDownloaded, this, &ApodProvider::onImageDownloaded );
+    connect( this, &InterfaceliftProvider::photoDownloaded, this, &InterfaceliftProvider::onImageDownloaded );
 }
 
-void ApodProvider::checkForNewPhoto()
-{
-    const QUrl pageUrl = QString( QLatin1Literal("http://apod.nasa.gov/apod/astropix.html") );
+void InterfaceliftProvider::checkForNewPhoto()
+{   
+    const QUrl pageUrl = QString( QLatin1Literal("https://interfacelift.com/") );
 
-    qDebug() << "Apotd: requesting page";
-
-    m_data[cPageUrlKey] = pageUrl;
-
+    qDebug() << "IFL: requesting page";
+    
     connect( KIO::storedGet( pageUrl, KIO::Reload, KIO::HideProgressInfo ), &KJob::result, [this] ( KJob *job )
-    {
-        qDebug() << "Apotd: Page received. Error: " << job->error();
+    {        
+        qDebug() << "IFL: Page received. Error: " << job->error();
 
         if( 0 != job->error() )
         {
@@ -83,44 +62,44 @@ void ApodProvider::checkForNewPhoto()
         else
         {
             auto *storedJob = qobject_cast<KIO::StoredTransferJob*>(job);
-
+            
             Q_ASSERT(storedJob != nullptr);
-
-            qDebug() << "Parse page";
-
+            
             this->parseWebPage( storedJob->data() );
         }
-
+        
         job->deleteLater(); //NOTE: "The default for any KJob is to automatically delete itself."
     } );
-
 }
 
 //TOOD: This function can be moved to ProviderCore and used immediately, instead of ImageDownloaded signal
-void ApodProvider::onImageDownloaded()
+void InterfaceliftProvider::onImageDownloaded()
 {
+    qDebug() << "IFL: Image downloaded";
+
     saveInCache();
 
     // Finish
     emit newPhotoAvailable(m_data);
 }
 
-void ApodProvider::parseWebPage(const QByteArray& source)
-{
+void InterfaceliftProvider::parseWebPage(const QByteArray& source)
+{    
     const QString data = QString::fromUtf8( source );
 
-    const QString pattern( QLatin1String( "<a href=\"(image/.*)\"" ) );
-    QRegExp exp( pattern );
-    exp.setMinimal( true );
-
-    if ( exp.indexIn( data ) == -1 ) {
+    QString pattern = QLatin1String("<img id=\"wall_img\" src=\"(/wallpaper/previews/.*)\" />");
+    QRegExp regExp;
+    regExp.setMinimal(true);
+    regExp.setPattern( pattern );
+    
+    if( regExp.indexIn( data ) == -1 ) {
         emit error( i18n("Web page parsing error") );
         qDebug() << "Web page parsing error 1";
         return;
     }
 
-    const QString sub = exp.cap(1);
-    QUrl photoUrl( QString( QLatin1String( "http://antwrp.gsfc.nasa.gov/apod/%1" ) ).arg( sub ) );
+    const QString photoUrlString = QLatin1String("https://interfacelift.com") + regExp.cap(1);
+    const QUrl photoUrl = QUrl( photoUrlString );
 
     if( !photoUrl.isValid() ) {
         emit error( i18n("Web page parsing error") );
@@ -134,14 +113,38 @@ void ApodProvider::parseWebPage(const QByteArray& source)
         return;
     }
 
-    // get title
-    m_data[cTitleKey] = getTitle(data);
+    m_data[cPhotoUrlKey] = photoUrl;
+    
+    // get page url
+    pattern = QLatin1String("<a class=\"label\" href=\"(/wallpaper/details/.*)\">");
+    regExp.setPattern(pattern);
 
-    downloadPhoto(photoUrl);
+    if( regExp.indexIn(data) != -1 )
+    {
+        m_data[cPageUrlKey] = QUrl( QLatin1String("https://interfacelift.com/") + regExp.cap(1) );
+    }
+    else
+    {
+        m_data[cPageUrlKey] = QUrl( QLatin1String("https://interfacelift.com/") );
+    }
+
+    // get title
+    pattern = QLatin1String("<h1>(.*?)</h1>");
+    regExp.setPattern( pattern );
+
+    if( regExp.indexIn(data) != -1 )
+    {
+        m_data[cTitleKey] = regExp.cap(1);
+    }
+    else
+    {
+        m_data[cTitleKey] = QString( QLatin1String("Interfacelift wallpaper") );
+    }
+    
+    qDebug() << "IFL: Page parsed";
+
+    downloadPhoto( photoUrl );
 }
 
 
-
-
-
-#include "apod.moc"
+#include "interfacelift.moc"

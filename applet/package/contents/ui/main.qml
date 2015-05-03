@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
-
+import org.kde.kquickcontrolsaddons 2.0
 
 import org.task_struct.private.photooftheday 1.0
  
@@ -27,6 +27,7 @@ Item {
     
     // logic
     property string selectedProviderCfg: Plasmoid.configuration.selectedProvider
+    property int updateIntervalCgf: Plasmoid.configuration.updateInterval
     property real _strenght: 0.0
     
     // constants
@@ -36,46 +37,28 @@ Item {
 
     signal newSizeUpdated( size newSize)
 
-    Image {
+    QPixmapItem {
         id: photo
 
-        property bool updated: false
+        width: nativeWidth
+        height: nativeHeight
 
+        smooth: true
         visible: false
         layer.enabled: true;
         layer.smooth: true
 
-        onImplicitWidthChanged: {
-            console.debug( "Photo.implicitWidth = ", implicitWidth )
-
-            if(updated) {
-                rootItem.calcNewSize()
-                updated = false;
-            }
-            else {
-                updated = true;
-            }
+        onPixmapChanged: {
+            console.debug( "Photo.nativeWidth = ", nativeWidth )
+            console.debug( "Photo.nativeHeight = ", nativeHeight )
+            rootItem.calcNewSize()
         }
-
-        onImplicitHeightChanged: {
-            console.debug( "Photo.implicitHeight = ", implicitHeight )
-
-            if(updated) {
-                rootItem.calcNewSize()
-                updated = false;
-            }
-            else {
-                updated = true;
-            }
-        }
-
-        onStateChanged: console.debug("Photo.state = ", state )
-
-        onSourceSizeChanged: console.debug("Photo.sourceSize = ", sourceSize)
     }
 
-    Image {
+    QPixmapItem {
         id: photoBuffer
+        width: nativeWidth
+        height: nativeHeight
         visible: false
         layer.enabled: true;
         layer.smooth: true
@@ -103,20 +86,7 @@ Item {
         console.debug( "Component.onCompleted" )
         plasmoid.setConfigurationRequired( selectedProviderCfg === "", i18n("No provider is specified") )
 //         plasmoid.setConfigurationRequired( selectedProviderCfg.length == 0, i18n("No provider is specified") )
-        
 //         Plasmoid.aspectRatioMode = Plasmoid.KeepAspectRatio
-
-//        console.debug("Plasmoid object dump:")
-//        for( var key in plasmoid ) {
-//            console.debug( key," = ", plasmoid[key] )
-//        }
-
-//        console.debug("Plasmoid.nativeInterface object dump:")
-//        for( key in plasmoid.nativeInterface ) {
-//            console.debug( key," = ", plasmoid[key] )
-//        }
-
-//        photo.source = "/home/nikolay/Свалени/walls/wallpaper-3032560.jpg"
     }
 
     function calcNewSize() {
@@ -126,13 +96,13 @@ Item {
 
         var newSize = Qt.size( 0, 0 )
 
-        if( photo.implicitWidth >= photo.implicitHeight ) {
+        if( photo.nativeWidth >= photo.nativeHeight ) {
             newSize.width = maxSize
-            newSize.height = maxSize * ( photo.implicitHeight / photo.implicitWidth )
+            newSize.height = maxSize * ( photo.nativeHeight / photo.nativeWidth )
         }
         else {
             newSize.height = maxSize
-            newSize.width = maxSize * ( photo.implicitWidth / photo.implicitHeight )
+            newSize.width = maxSize * ( photo.nativeWidth / photo.nativeHeight )
         }
 
         console.debug("New plasmoid size is ", newSize)
@@ -141,8 +111,9 @@ Item {
     }
     
     onSelectedProviderCfgChanged: {
+//        console.debug("New selected provider: ", selectedProviderCfg)
         if( selectedProviderCfg.length != 0 ) {
-            _providerSource = selectedProviderCfg + ":" + plasmoid.id;
+            _providerSource = selectedProviderCfg;
             
             potdEngine.connectSource( _providerSource )
         
@@ -213,8 +184,8 @@ Item {
         layer.effect: ShaderEffect {
             id: shaderEffect
 
-            property var photoSource: photo.source != "" ? photo : blank
-            property var prevSource: photoBuffer.source != "" ? photoBuffer : blank
+            property var photoSource: photo.null ? blank : photo
+            property var prevSource: photoBuffer.null ? blank : photoBuffer
             property real strenght: rootItem._strenght
 
             fragmentShader: "
@@ -257,6 +228,7 @@ Item {
         id: potdEngine
         engine: "org.task_struct.photooftheday"
         connectedSources: "Providers"
+        interval: updateIntervalCgf * 60000 // convert minutes to milliseconds
         
         onSourceAdded: {
             console.debug( "onSourceAdded: " + source ) 
@@ -267,13 +239,17 @@ Item {
             
             if( _providerSource == sourceName ) {
 
+                if( undefined === data.Photo ) {
+                    return
+                }
+
                 plasmoid.busy = false
                 
                 // set current image as back
-                photoBuffer.source = photo.source
+                photoBuffer.pixmap = photo.pixmap
 
                 // load new image
-                photo.source = data.Photo
+                photo.pixmap = data.Photo
 
                 plasmoid.toolTipMainText = data.Title
                 

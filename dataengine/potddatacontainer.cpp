@@ -30,16 +30,40 @@
 #include "providercore.h"
 #include "potddatacontainer.h"
 
-PotdDataContainer::PotdDataContainer(ProviderCore* provider, QObject* parent): DataContainer(parent),
+#include <QDebug>
+
+PotdDataContainer::PotdDataContainer(ProviderCore* provider, QObject* parent): Plasma::DataContainer(parent),
 m_provider(provider)
 {
     Q_ASSERT(m_provider == nullptr);
 
+    qDebug() << "Adding container " << objectName();
+
     m_provider->registerContainer();
    
-    connect( this, &Plasma::DataContainer::updateRequested, [this](DataContainer *  source) {
+    connect( this, &Plasma::DataContainer::updateRequested, [](Plasma::DataContainer * source) {
         // request update from provider. This signal is emitted every time the polling interval expires.
-        this->m_provider->checkForNewPhoto(this);
+        auto dc = qobject_cast<PotdDataContainer*>(source);
+        if(dc) {
+            dc->m_provider->checkForNewPhoto(dc);
+        }
+    } );
+
+    connect( provider, &ProviderCore::newPhotoAvailable, [this](const Plasma::DataEngine::Data data) {
+
+        auto iter = data.cbegin();
+        while( iter != data.cend() ) {
+            this->setData( iter.key(), iter.value() );
+            ++iter;
+        }
+
+        this->setData( cErrorKey, QString() );
+        this->triggerUpdate();
+    } );
+
+    connect( provider, &ProviderCore::error, [this](const QString error) {
+        this->setData( cErrorKey, error );
+        this->triggerUpdate();
     } );
     
     m_provider->checkForNewPhoto(this);

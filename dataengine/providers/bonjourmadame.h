@@ -26,25 +26,26 @@
  *
  */
 
-#ifndef APODPROVIDER_H
-#define APODPROVIDER_H
+#ifndef BONJOURMADAMEPROVIDER_H
+#define BONJOURMADAMEPROVIDER_H
 
 #include "providercore.h"
 
-class ApodProvider : public ProviderCore
+class BonjourMadameProvider : public ProviderCore
 {
     Q_OBJECT
 
 public:
-    ApodProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
+    explicit BonjourMadameProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
+    ~BonjourMadameProvider() = default;
     
     void checkForNewPhoto();
-    
+
 public Q_SLOTS:
     void onImageDownloaded();
-
+    
 private:
     void parseWebPage( const QByteArray & source );
 };
 
-#endif // APODPROVIDER_H
+#endif // BONJOURMADAMEPROVIDER_H

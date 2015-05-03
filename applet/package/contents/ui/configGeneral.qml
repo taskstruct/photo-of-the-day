@@ -1,13 +1,13 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.1 as QtControls
-import QtQuick.Layouts 1.1 as QtLayouts
-import QtQuick.Dialogs 1.0 as QtDialogs
+import QtQuick.Layouts 1.1
+import QtQuick.Dialogs 1.0
 
 // QtControls.GroupBox {
 Item {
     width: childrenRect.width
     height: childrenRect.height
-    
+
 //     flat: true
 //     title: i18n("Appearance")
     
@@ -25,65 +25,65 @@ Item {
     
     property alias cfg_animatedTransitions: animTransCheckBox.checked
     
-    QtLayouts.ColumnLayout {
-        
+    ColumnLayout {
+
         width: parent.width
-        
+
         QtControls.GroupBox {
             title: i18n("Shadow")
-            
-            QtLayouts.Layout.fillWidth: true
-            
-            QtLayouts.GridLayout {
-                
+
+            Layout.fillWidth: true
+
+            GridLayout {
+
                 columns: 2
-                
+
                 QtControls.CheckBox {
                     id: showShadowCheckBox
                     text: i18n("Show shadow around image")
-                    
-                    QtLayouts.Layout.columnSpan: 2
+
+                    Layout.columnSpan: 2
                 }
-                 
+
                 QtControls.Label {
                     text: i18n("Width")
                 }
-                
+
                 QtControls.SpinBox {
                     id: shadowWidthSpinBox
                     enabled: showShadowCheckBox.checked
-                    
+
                     minimumValue: 1
                     maximumValue: 100
                 }
-                
+
                 QtControls.Label {
                     text: i18n("Spread")
                 }
-                
+
                 QtControls.SpinBox {
                     id: shadowSpreadSpinBox
                     enabled: showShadowCheckBox.checked
-                    
+
                     decimals: 1
                     minimumValue: 0.0
                     maximumValue: 1.0
                     stepSize: 0.1
                 }
-                
+
                 QtControls.Label {
                     text: i18n("Color")
                 }
-                    
+
                 QtControls.Button {
                     iconName: "color-picker"
                     enabled: showShadowCheckBox.checked
-                    
-                    QtDialogs.ColorDialog {
+
+                    ColorDialog {
                         id: shadowColorDialog
                         title: i18n("Please choose a color")
                         visible: false
-                        
+
                         onAccepted: {
                             cfg_shadowColor = color
                             close()
@@ -92,67 +92,67 @@ Item {
                             close()
                         }
                     }
-                    
+
                     onClicked: { shadowColorDialog.open() }
                 }
             }
         }
-        
+
         QtControls.GroupBox {
             title: i18n("Border")
-            
-            QtLayouts.Layout.fillWidth: true
-            
-            QtLayouts.GridLayout {
-                
+
+            Layout.fillWidth: true
+
+            GridLayout {
+
                 columns: 2
-        
+
                 QtControls.CheckBox {
                     id: showBorderCheckBox
                     text: i18n("Show border around image")
-                    
-                    QtLayouts.Layout.columnSpan: 2
+
+                    Layout.columnSpan: 2
                 }
-                
+
                 QtControls.Label {
                     text: i18n("Width")
                 }
-                
+
                 QtControls.SpinBox {
                     id: borderWidthSpinBox
                     enabled: showBorderCheckBox.checked
-                    
+
                     minimumValue: 1
                     maximumValue: 100
                 }
-                
+
                 QtControls.Label {
                     text: i18n("Opacity")
                 }
-                
+
                 QtControls.SpinBox {
                     id: borderOpacitySpinBox
                     enabled: showBorderCheckBox.checked
-                    
+
                     decimals: 2
                     minimumValue: 0.05
                     maximumValue: 1.0
                     stepSize: 0.05
                 }
-                
+
                 QtControls.Label {
                     text: i18n("Color")
                 }
-                
+
                 QtControls.Button {
                     iconName: "color-picker"
                     enabled: showBorderCheckBox.checked
-                    
-                    QtDialogs.ColorDialog {
+
+                    ColorDialog {
                         id: borderColorDialog
                         title: i18n("Please choose a color")
                         visible: false
-                        
+
                         onAccepted: {
                             cfg_borderColor = color
                             close()
@@ -161,29 +161,29 @@ Item {
                             close()
                         }
                     }
-                    
+
                     onClicked: { borderColorDialog.open() }
                 }
             }
         }
-        
-        
-        QtLayouts.RowLayout {
+
+
+        RowLayout {
             QtControls.Label {
                 text: i18n("Rounded corners")
             }
-            
+
             QtControls.SpinBox {
                 id: roundedCornersSpinBox
-                
+
                 minimumValue: 0
                 maximumValue: 50 //TODO: Max should be plasmioid.width / 2 !
             }
         }
-        
+
         QtControls.CheckBox {
             id: animTransCheckBox
-            
+
             text: i18n("Animated transitions")
         }
     }

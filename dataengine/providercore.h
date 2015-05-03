@@ -42,36 +42,34 @@ namespace Plasma {
 
 class PotdDataContainer;
 
-const QLatin1Literal cPhotoKey("Photo");
-const QLatin1Literal cPageUrlKey("PageUrl");
-const QLatin1Literal cPrevPageUrlKey("PrevPageUrl");
-const QLatin1Literal cTitleKey("Title");
-
-const QLatin1Literal cErrorKey("Error");
-
 class PHOTOOFTHEDAY_EXPORT ProviderCore : public QObject
 {
     Q_OBJECT
 
 public:
+    static const QString cPhotoKey; // Local path to cached photo (QPixmap)
+    static const QString cPhotoUrlKey; // Photo URL on web site (QUrl)
+    static const QString cPageUrlKey;// URL to photo page (QUrl)
+    static const QString cTitleKey;// (QString)
+    static const QString cErrorKey;// (QString)
+
     //TODO: check if parent can be default param
     ProviderCore(QObject* parent = 0, const QVariantList& args = QVariantList() );
     
-    virtual void checkForNewPhoto(PotdDataContainer* dataContainer) = 0;
-        
-    inline void registerContainer() { ++m_use_count; }
-    void unregisterContainer();
+    virtual void checkForNewPhoto() = 0;
     
 Q_SIGNALS:
-    void photoReady(const QString& source, const Plasma::DataEngine::Data& data);
+    void newPhotoAvailable( const Plasma::DataEngine::Data data );
+    void error( const QString error );
 
-    void unused();
+    void photoDownloaded();
 
-private:
-    
-    inline Plasma::DataEngine* dataEngine() { return qobject_cast<Plasma::DataEngine*>( parent() ); }
-    
-    int m_use_count = 0;
+protected:
+    void downloadPhoto(const QUrl &url);
+    void savePhoto(const QPixmap &pixmap, const char *format );
+    void saveInCache();
+
+    Plasma::DataEngine::Data m_data;
 };
 
 

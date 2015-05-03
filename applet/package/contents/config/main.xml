@@ -44,7 +44,10 @@
     <group name="Providers">
         <entry name="selectedProvider" type="String">
             <default></default>
-        </entry>        
+        </entry>
+        <entry name="updateInterval" type="UInt">
+            <default>60</default>
+        </entry>
     </group>
     
 </kcfg>

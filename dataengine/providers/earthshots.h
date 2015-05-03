@@ -26,25 +26,26 @@
  *
  */
 
-#ifndef APODPROVIDER_H
-#define APODPROVIDER_H
+#ifndef EARTHSHOTSPROVIDER_H
+#define EARTHSHOTSPROVIDER_H
 
 #include "providercore.h"
 
-class ApodProvider : public ProviderCore
+class EarthshotsProvider : public ProviderCore
 {
     Q_OBJECT
 
 public:
-    ApodProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
+    explicit EarthshotsProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
+    ~EarthshotsProvider() = default;
     
     void checkForNewPhoto();
-    
+
 public Q_SLOTS:
     void onImageDownloaded();
-
+    
 private:
     void parseWebPage( const QByteArray & source );
 };
 
-#endif // APODPROVIDER_H
+#endif // EARTHSHOTSPROVIDER_H

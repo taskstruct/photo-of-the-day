@@ -108,8 +108,12 @@ QString ProvidersModel::getPluginName(int index)
     if( index >= m_providers.count() ) {
         return QString();
     }
+
+    const QString name = m_providers.at(index)->property(QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" )).toString();
     
-    return m_providers.at(index)->property(QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" )).toString();
+    qDebug() << "getPluginName() name is " << name;
+
+    return name;
 }
 
 

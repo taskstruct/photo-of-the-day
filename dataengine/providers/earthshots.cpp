@@ -26,55 +26,34 @@
  *
  */
 
-#include <QtCore/QSettings>
-
 #include <KI18n/KLocalizedString>
 
 #include <KCoreAddons/KJob>
 #include <KIO/Job>
 #include <KIO/StoredTransferJob>
 
-#include "apod.h"
+#include "earthshots.h"
 
 #include <QDebug>
 
-K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-apod.json", ApodProvider )
-
-//===== helper function =====
-static QString getTitle( const QString& data )
-{
-    QString title = QLatin1String("Astronomy Picture of the Day");
-
-    const QString pattern = QLatin1String("<center>\n<b>(.*?)</b>");
-    QRegExp regExp;
-    regExp.setMinimal(true);
-    regExp.setPattern( pattern );
-
-    if( regExp.indexIn( data ) == -1 ) {
-        title = regExp.cap(1);
-    }
-
-    return title;
-}
+K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-earthshots.json", EarthshotsProvider )
 
 //==========
-ApodProvider::ApodProvider(QObject *parent, const QVariantList &args):
+EarthshotsProvider::EarthshotsProvider(QObject *parent, const QVariantList &args):
 ProviderCore(parent, args)
 {
-    connect( this, &ApodProvider::photoDownloaded, this, &ApodProvider::onImageDownloaded );
+    connect( this, &EarthshotsProvider::photoDownloaded, this, &EarthshotsProvider::onImageDownloaded );
 }
 
-void ApodProvider::checkForNewPhoto()
-{
-    const QUrl pageUrl = QString( QLatin1Literal("http://apod.nasa.gov/apod/astropix.html") );
+void EarthshotsProvider::checkForNewPhoto()
+{   
+    const QUrl pageUrl = QString( QLatin1Literal("http://www.earthshots.org/") );
 
-    qDebug() << "Apotd: requesting page";
-
-    m_data[cPageUrlKey] = pageUrl;
-
+    qDebug() << "ES: requesting page";
+    
     connect( KIO::storedGet( pageUrl, KIO::Reload, KIO::HideProgressInfo ), &KJob::result, [this] ( KJob *job )
-    {
-        qDebug() << "Apotd: Page received. Error: " << job->error();
+    {        
+        qDebug() << "ES: Page received. Error: " << job->error();
 
         if( 0 != job->error() )
         {
@@ -83,44 +62,44 @@ void ApodProvider::checkForNewPhoto()
         else
         {
             auto *storedJob = qobject_cast<KIO::StoredTransferJob*>(job);
-
+            
             Q_ASSERT(storedJob != nullptr);
-
-            qDebug() << "Parse page";
-
+            
             this->parseWebPage( storedJob->data() );
         }
-
+        
         job->deleteLater(); //NOTE: "The default for any KJob is to automatically delete itself."
     } );
-
 }
 
 //TOOD: This function can be moved to ProviderCore and used immediately, instead of ImageDownloaded signal
-void ApodProvider::onImageDownloaded()
+void EarthshotsProvider::onImageDownloaded()
 {
+    qDebug() << "ES: Image downloaded";
+
     saveInCache();
 
     // Finish
     emit newPhotoAvailable(m_data);
 }
 
-void ApodProvider::parseWebPage(const QByteArray& source)
-{
+void EarthshotsProvider::parseWebPage(const QByteArray& source)
+{    
     const QString data = QString::fromUtf8( source );
 
-    const QString pattern( QLatin1String( "<a href=\"(image/.*)\"" ) );
-    QRegExp exp( pattern );
-    exp.setMinimal( true );
-
-    if ( exp.indexIn( data ) == -1 ) {
+    QString pattern = QLatin1String("<link rel=\"image_src\" href=\"(http://img.earthshots.org/.*)\" />");
+    QRegExp regExp;
+    regExp.setMinimal(true);
+    regExp.setPattern( pattern );
+    
+    if( regExp.indexIn( data ) == -1 ) {
         emit error( i18n("Web page parsing error") );
         qDebug() << "Web page parsing error 1";
         return;
     }
 
-    const QString sub = exp.cap(1);
-    QUrl photoUrl( QString( QLatin1String( "http://antwrp.gsfc.nasa.gov/apod/%1" ) ).arg( sub ) );
+    const QString photoUrlString = regExp.cap(1);
+    const QUrl photoUrl = QUrl( photoUrlString );
 
     if( !photoUrl.isValid() ) {
         emit error( i18n("Web page parsing error") );
@@ -134,14 +113,36 @@ void ApodProvider::parseWebPage(const QByteArray& source)
         return;
     }
 
-    // get title
-    m_data[cTitleKey] = getTitle(data);
+    m_data[cPhotoUrlKey] = photoUrl;
+    
 
-    downloadPhoto(photoUrl);
+    // get page link from <a> tag and photo title from img alt attribute
+    pattern = QString( QLatin1String("<a href=\"(http://www.earthshots.org/.*/)\"><img src=\"%1\" alt=\"(.*)\" /></a>")).arg(photoUrlString);
+    regExp.setPattern( pattern );
+
+    if( regExp.indexIn(data) != -1 )
+    {
+        m_data[cTitleKey] = regExp.cap(1);
+
+        const QUrl pageUrl( regExp.cap(2) );
+
+        if(pageUrl.isValid()) {
+            m_data[cPageUrlKey] = pageUrl;
+        }
+        else {
+            m_data[cPageUrlKey] = QUrl( QLatin1String("http://www.earthshots.org/") );
+        }
+    }
+    else
+    {
+        m_data[cTitleKey] = QString( QLatin1String("Earth Shots") );
+        m_data[cPageUrlKey] = QUrl( QLatin1String("http://www.earthshots.org/") );
+    }
+    
+    qDebug() << "ES: Page parsed";
+
+    downloadPhoto( photoUrl );
 }
 
 
-
-
-
-#include "apod.moc"
+#include "earthshots.moc"

@@ -26,25 +26,26 @@
  *
  */
 
-#ifndef APODPROVIDER_H
-#define APODPROVIDER_H
+#ifndef STEVESDIGICAMSPROVIDER_H
+#define STEVESDIGICAMSPROVIDER_H
 
 #include "providercore.h"
 
-class ApodProvider : public ProviderCore
+class StevesDigicamsProvider : public ProviderCore
 {
     Q_OBJECT
 
 public:
-    ApodProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
+    explicit StevesDigicamsProvider(QObject* parent = 0, const QVariantList& args = QVariantList());
+    ~StevesDigicamsProvider() = default;
     
     void checkForNewPhoto();
-    
+
 public Q_SLOTS:
     void onImageDownloaded();
-
+    
 private:
     void parseWebPage( const QByteArray & source );
 };
 
-#endif // APODPROVIDER_H
+#endif // STEVESDIGICAMSPROVIDER_H

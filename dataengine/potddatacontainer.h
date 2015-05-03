@@ -44,9 +44,9 @@ public:
     explicit PotdDataContainer( ProviderCore* provider, QObject* parent = 0);
     virtual ~PotdDataContainer();
     
-    void setDataStruct(QSharedPointer<Data> data) { m_data = data; };
+    void setDataStruct(QSharedPointer<Data> data) { m_data = data; }
     
-    inline void triggerUpdate() { checkForUpdate(); };
+    inline void triggerUpdate() { checkForUpdate(); }
     
 private:
     ProviderCore *m_provider;

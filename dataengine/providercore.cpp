@@ -26,19 +26,81 @@
  *
  */
 
+#include <QtCore/QSettings>
+#include <QtCore/QStandardPaths>
+
+#include <QtCore/QDir>
+#include <QtCore/QFile>
+#include <QtCore/QUrl>
+
+#include <QtGui/QPixmap>
+
+#include <KI18n/KLocalizedString>
+
+#include <KIO/StoredTransferJob>
+
 #include "providercore.h"
+
+#include <QDebug>
+
+const QString ProviderCore::cPhotoKey = QString("Photo");
+const QString ProviderCore::cPhotoUrlKey = QLatin1Literal("PhotoUrl");
+const QString ProviderCore::cPageUrlKey = QLatin1Literal("PageUrl");
+const QString ProviderCore::cTitleKey = QLatin1Literal("Title");
+const QString ProviderCore::cErrorKey = QLatin1Literal("Error");
 
 ProviderCore::ProviderCore(QObject *parent, const QVariantList &args):
     QObject(parent)
 {
 }
 
-void ProviderCore::unregisterContainer() {
-    --m_use_count;
+void ProviderCore::downloadPhoto(const QUrl &url)
+{
+    auto job = KIO::storedGet( url, KIO::Reload, KIO::HideProgressInfo);
 
-    if(!m_use_count) {
-        emit unused();
-    }
+    connect( job, &KIO::StoredTransferJob::result, [this] ( KJob *job ) {
+        if( job->error() == 0 )
+        {
+            auto storedJob = qobject_cast<KIO::StoredTransferJob*>(job);
+
+            const QString type = storedJob->mimetype().split('/').at(1);
+            const QByteArray format = type.toLatin1();
+
+            QPixmap pixmap;
+            pixmap.loadFromData( storedJob->data(), format.data() );
+
+            this->m_data[cPhotoKey] = pixmap;
+            this->savePhoto( pixmap, format.data() );
+
+            emit this->photoDownloaded();
+        }
+        else {
+            emit this->error( i18n("Error while downloading photo: %1", job->errorString() ) );
+        }
+    } );
 }
+
+void ProviderCore::savePhoto(const QPixmap &pixmap, const char *format)
+{
+    const QChar dirSep = QDir::separator();
+    auto dirPath = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + dirSep + "photo-of-the-day" + dirSep;
+    auto photoFileName = dirPath + objectName() + '.' + format;
+    pixmap.save( photoFileName, format );
+}
+
+void ProviderCore::saveInCache()
+{
+    const QChar dirSep = QDir::separator();
+
+    auto dirPath = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + dirSep + "photo-of-the-day" + dirSep;
+
+    auto cacheFileName = dirPath + objectName() + ".cache";
+    QSettings cache( cacheFileName, QSettings::IniFormat, this );
+
+    cache.setValue( cPhotoUrlKey, m_data[cPhotoUrlKey].toUrl() );
+    cache.setValue( cPageUrlKey, m_data[cPageUrlKey].toUrl() );
+    cache.setValue( cTitleKey, m_data[cTitleKey].toString() );
+}
+
 
 #include "providercore.moc"

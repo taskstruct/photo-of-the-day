@@ -26,55 +26,34 @@
  *
  */
 
-#include <QtCore/QSettings>
-
 #include <KI18n/KLocalizedString>
 
 #include <KCoreAddons/KJob>
 #include <KIO/Job>
 #include <KIO/StoredTransferJob>
 
-#include "apod.h"
+#include "bonjourmadame.h"
 
 #include <QDebug>
 
-K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-apod.json", ApodProvider )
+K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-bonjourmadame.json", BonjourMadameProvider )
 
-//===== helper function =====
-static QString getTitle( const QString& data )
-{
-    QString title = QLatin1String("Astronomy Picture of the Day");
-
-    const QString pattern = QLatin1String("<center>\n<b>(.*?)</b>");
-    QRegExp regExp;
-    regExp.setMinimal(true);
-    regExp.setPattern( pattern );
-
-    if( regExp.indexIn( data ) == -1 ) {
-        title = regExp.cap(1);
-    }
-
-    return title;
-}
+static const QUrl cBonjourMadameUrl = QUrl(QLatin1String("http://www.bonjourmadame.fr/"));
 
 //==========
-ApodProvider::ApodProvider(QObject *parent, const QVariantList &args):
+BonjourMadameProvider::BonjourMadameProvider(QObject *parent, const QVariantList &args):
 ProviderCore(parent, args)
 {
-    connect( this, &ApodProvider::photoDownloaded, this, &ApodProvider::onImageDownloaded );
+    connect( this, &BonjourMadameProvider::photoDownloaded, this, &BonjourMadameProvider::onImageDownloaded );
 }
 
-void ApodProvider::checkForNewPhoto()
-{
-    const QUrl pageUrl = QString( QLatin1Literal("http://apod.nasa.gov/apod/astropix.html") );
-
-    qDebug() << "Apotd: requesting page";
-
-    m_data[cPageUrlKey] = pageUrl;
-
-    connect( KIO::storedGet( pageUrl, KIO::Reload, KIO::HideProgressInfo ), &KJob::result, [this] ( KJob *job )
-    {
-        qDebug() << "Apotd: Page received. Error: " << job->error();
+void BonjourMadameProvider::checkForNewPhoto()
+{   
+    qDebug() << "BM: requesting page";
+    
+    connect( KIO::storedGet( cBonjourMadameUrl, KIO::Reload, KIO::HideProgressInfo ), &KJob::result, [this] ( KJob *job )
+    {        
+        qDebug() << "BM: Page received. Error: " << job->error();
 
         if( 0 != job->error() )
         {
@@ -83,48 +62,66 @@ void ApodProvider::checkForNewPhoto()
         else
         {
             auto *storedJob = qobject_cast<KIO::StoredTransferJob*>(job);
-
+            
             Q_ASSERT(storedJob != nullptr);
-
-            qDebug() << "Parse page";
-
+            
             this->parseWebPage( storedJob->data() );
         }
-
+        
         job->deleteLater(); //NOTE: "The default for any KJob is to automatically delete itself."
     } );
-
 }
 
 //TOOD: This function can be moved to ProviderCore and used immediately, instead of ImageDownloaded signal
-void ApodProvider::onImageDownloaded()
+void BonjourMadameProvider::onImageDownloaded()
 {
+    qDebug() << "BM: Image downloaded";
+
     saveInCache();
 
     // Finish
     emit newPhotoAvailable(m_data);
 }
 
-void ApodProvider::parseWebPage(const QByteArray& source)
-{
+void BonjourMadameProvider::parseWebPage(const QByteArray& source)
+{    
     const QString data = QString::fromUtf8( source );
 
-    const QString pattern( QLatin1String( "<a href=\"(image/.*)\"" ) );
-    QRegExp exp( pattern );
-    exp.setMinimal( true );
 
-    if ( exp.indexIn( data ) == -1 ) {
+    const QByteArray marker("<div class=\"photo post\">");
+
+    int startIndex = data.indexOf( marker );
+
+    if( -1 == startIndex ) {
         emit error( i18n("Web page parsing error") );
         qDebug() << "Web page parsing error 1";
         return;
     }
 
-    const QString sub = exp.cap(1);
-    QUrl photoUrl( QString( QLatin1String( "http://antwrp.gsfc.nasa.gov/apod/%1" ) ).arg( sub ) );
+    startIndex += marker.size();
+
+    const int endIndex = source.indexOf("</div>", startIndex);
+
+    const QString divTag = source.mid( startIndex, endIndex - startIndex );
+
+    qDebug() << "dirTag: " << divTag;
+
+    QString pattern = QLatin1String("<img src=\"(.*)\" alt=\"(.*)\"/>");
+    QRegExp regExp;
+    regExp.setMinimal(true);
+    regExp.setPattern( pattern );
+    
+    if( regExp.indexIn( divTag ) == -1 ) {
+        emit error( i18n("Web page parsing error") );
+        qDebug() << "Web page parsing error 2";
+        return;
+    }
+
+    const QUrl photoUrl = QUrl( regExp.cap(1) );
 
     if( !photoUrl.isValid() ) {
         emit error( i18n("Web page parsing error") );
-        qDebug() << "Web page parsing error 2";
+        qDebug() << "Web page parsing error 3";
         return;
     }
 
@@ -134,14 +131,33 @@ void ApodProvider::parseWebPage(const QByteArray& source)
         return;
     }
 
-    // get title
-    m_data[cTitleKey] = getTitle(data);
+    m_data[cPhotoUrlKey] = photoUrl;
 
-    downloadPhoto(photoUrl);
+    // get title
+    m_data[cTitleKey] = regExp.cap(2);
+
+    // get photo page URL
+    pattern = QLatin1String("<a href=\"(http://www.bonjourmadame.fr/image/[0-9]{12})\">");
+    regExp.setPattern( pattern );
+
+    if( regExp.indexIn( divTag ) != -1 )
+    {
+        const QUrl pageUrl( regExp.cap(1) );
+
+        if( !regExp.isValid() ) {
+             m_data[cPageUrlKey] = cBonjourMadameUrl;
+        }
+
+        m_data[cPageUrlKey] = pageUrl;
+    }
+    else {
+        m_data[cPageUrlKey] = cBonjourMadameUrl;
+    }
+    
+    qDebug() << "BM: Page parsed";
+
+    downloadPhoto( photoUrl );
 }
 
 
-
-
-
-#include "apod.moc"
+#include "bonjourmadame.moc"

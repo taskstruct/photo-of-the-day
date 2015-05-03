@@ -1,23 +1,20 @@
 #ifndef CacheManager_H
 #define CacheManager_H
 
-#include "photooftheday_export.h"
+class ProviderCore;
 
-class PHOTOOFTHEDAY_EXPORT CacheManager
+class CacheManager
 {
 public:
-    static CacheManager* create( const QString& pid );
-    
+    explicit CacheManager(const ProviderCore* provder);
     ~CacheManager();
-    
-    // image cache
-    bool save(const QString& imageName, const QByteArray& data, QString& cacheName );
+
+    void init(const ProviderCore* provder);
+
+    void saveData( const Plasma::DataEngine::Data &data );
+    void restoreData( Plasma::DataEngine::Data &data );
 
 private:
-    CacheManager(const QString& pid);
-    
-    QString m_provider;
-    QString m_path;
 };
 
 #endif // CacheManager_H
