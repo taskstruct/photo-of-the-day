@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQuick.Layouts 1.1
 import org.kde.plasma.components 2.0 as PlasmaComponents
 
 Item {
@@ -10,7 +11,7 @@ Item {
     opacity: 0
     visible: appletArea.containsMouse
 
-    PlasmaComponents.ButtonRow
+    RowLayout
     {
         id: buttonsRow
 
@@ -109,6 +110,6 @@ Item {
 
     transitions: Transition {
         from: ""; to: "show"; reversible: true
-        NumberAnimation { properties: "opacity"; duration: 250; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: buttonBar; properties: "opacity"; duration: 2000 /*units.longDuration*/; easing.type: Easing.InOutQuad }
     }
 }

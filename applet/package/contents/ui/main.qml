@@ -217,12 +217,12 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
 
         ButtonBar {
-            anchors.right: parent.right
+//            anchors.right: parent.right
+            anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.margins: photoItem.x + 2
         }
     }
-    
     
     PlasmaCore.DataSource {
         id: potdEngine
@@ -251,10 +251,16 @@ Item {
                 // load new image
                 photo.pixmap = data.Photo
 
-                plasmoid.toolTipMainText = data.Title
-                
+                toolTip.mainText = data.Title
             }
         }
+    }
+
+    PlasmaCore.ToolTipArea {
+        id: toolTip
+        icon: "image"
+
+        anchors.fill: parent
     }
 
     ParallelAnimation {
