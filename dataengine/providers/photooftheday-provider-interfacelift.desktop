@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Service
+X-KDE-ServiceTypes=PhotoOfTheDay/Plugin
+# X-KDE-Derived=KPluginInfo
+X-KDE-Library=photooftheday_provider_interfacelift
+# X-KDE-PhotoOfTheDayEngineProvider-SuffixType=Date
+X-KDE-PhotoOfTheDayPlugin-Identifier=interfacelift
+
+Icon=
+
+Name= Interfacelift
+Name[bg]= Interfacelift
+
+Comment=Interfacelift lates photo provider
+Comment[bg]=Показва последната снимка от Interfacelift.com

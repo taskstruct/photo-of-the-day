@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Service
+X-KDE-ServiceTypes=PhotoOfTheDay/Plugin
+# X-KDE-Derived=KPluginInfo
+X-KDE-Library=photooftheday_provider_bonjourmadame
+# X-KDE-PhotoOfTheDayEngineProvider-SuffixType=Date
+X-KDE-PhotoOfTheDayPlugin-Identifier=bonjourmadame
+
+Icon=
+
+Name= Bonjour Madame
+Name[bg]= Добър ден, мадам
+
+Comment=Bonjour Madame photo of the day(+18)
+Comment[bg]=Снимка на деня от Bonjour Madame(+18)

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Service
+X-KDE-ServiceTypes=PhotoOfTheDay/Plugin
+# X-KDE-Derived=KPluginInfo
+X-KDE-Library=photooftheday_provider_stevesdigicams
+# X-KDE-PhotoOfTheDayEngineProvider-SuffixType=Date
+X-KDE-PhotoOfTheDayPlugin-Identifier=stevesdigicams
+
+Icon=
+
+Name= Steve's Digicams
+Name[bg]= Дигиталните камери на Стив
+
+Comment=Steve's Digicams photo of the day
+Comment[bg]=Снимка на деня от Steve's Digicams

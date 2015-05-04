@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Service
+X-KDE-ServiceTypes=PhotoOfTheDay/Plugin
+# X-KDE-Derived=KPluginInfo
+X-KDE-Library=photooftheday_provider_earthshots
+# X-KDE-PhotoOfTheDayEngineProvider-SuffixType=Date
+X-KDE-PhotoOfTheDayPlugin-Identifier=earthshots
+
+Icon=
+
+Name= Earth Shots
+Name[bg]= Earth Shots
+
+Comment=Earth Shots picture of the day provider
+Comment[bg]=Предоставя възможност за сваляне на снимки от Earthshots.org
