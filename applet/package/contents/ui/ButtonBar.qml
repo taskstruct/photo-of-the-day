@@ -9,7 +9,6 @@ Item {
     implicitHeight: buttonsRow.height
 
     opacity: 0
-    visible: appletArea.containsMouse
 
     RowLayout
     {
@@ -104,7 +103,7 @@ Item {
     }
 
     states: State {
-        name: "show"; when: appletArea.containsMouse
+        name: "show"; when: buttonBar.visible
         PropertyChanges { target: buttonBar; opacity: 1; }
     }
 

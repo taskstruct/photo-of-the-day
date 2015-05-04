@@ -207,17 +207,15 @@ Item {
         }
     }
 
-    MouseArea {
-        id: appletArea
+    PlasmaCore.ToolTipArea {
+        id: toolTip
+        icon: "image"
 
         anchors.fill: parent
 
-        hoverEnabled: true
-        preventStealing: false
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-
         ButtonBar {
-//            anchors.right: parent.right
+            //            anchors.right: parent.right
+            visible: toolTip.containsMouse
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.margins: photoItem.x + 2
@@ -254,13 +252,6 @@ Item {
                 toolTip.mainText = data.Title
             }
         }
-    }
-
-    PlasmaCore.ToolTipArea {
-        id: toolTip
-        icon: "image"
-
-        anchors.fill: parent
     }
 
     ParallelAnimation {
