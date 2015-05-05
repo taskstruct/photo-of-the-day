@@ -54,6 +54,51 @@ ProviderCore::ProviderCore(QObject *parent, const QVariantList &args):
 {
 }
 
+bool ProviderCore::restore( int interval )
+{
+    const QChar dirSep = QDir::separator();
+
+    auto dirPath = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + dirSep + "photo-of-the-day" + dirSep;
+
+    auto cacheFileName = dirPath + objectName() + ".cache";
+    QSettings cache( cacheFileName, QSettings::IniFormat, this );
+
+    QDateTime lastUpdate = cache.value( "LastUpdate", QDateTime() ).toDateTime();
+
+    if( !lastUpdate.isValid() ) {
+        checkForNewPhoto();
+        return false;
+    }
+
+    const quint64 elapsedTime = QDateTime::currentDateTime().msecsTo( lastUpdate );
+
+    if( ( elapsedTime < 0 ) || ( elapsedTime >= interval ) ) {
+        checkForNewPhoto();
+        return false;
+    }
+
+    auto photoFileName = dirPath + objectName() + ".jpeg"; //TODO: how to find extension or always save in jpg
+
+    if( !QFile::exists( photoFileName ) ) {
+        checkForNewPhoto();
+        return false;
+    }
+
+    QPixmap photo;
+
+    if( !photo.load( photoFileName ) ) {
+        checkForNewPhoto();
+        return false;
+    }
+
+    m_data[cPhotoKey] = photo;
+    m_data[cPhotoUrlKey] = cache.value(cPhotoUrlKey).toUrl();
+    m_data[cPageUrlKey] = cache.value(cPageUrlKey).toUrl();
+    m_data[cTitleKey] = cache.value(cTitleKey).toString();
+
+    return true;
+}
+
 void ProviderCore::downloadPhoto(const QUrl &url)
 {
     auto job = KIO::storedGet( url, KIO::Reload, KIO::HideProgressInfo);
@@ -100,6 +145,8 @@ void ProviderCore::saveInCache()
     cache.setValue( cPhotoUrlKey, m_data[cPhotoUrlKey].toUrl() );
     cache.setValue( cPageUrlKey, m_data[cPageUrlKey].toUrl() );
     cache.setValue( cTitleKey, m_data[cTitleKey].toString() );
+
+    cache.setValue( "LastUpdate", QDateTime::currentDateTime() );
 }
 
 

@@ -74,7 +74,7 @@ bool PhotoOfTheDay::sourceRequestEvent(const QString& source)
     m_instances.insert( source, provider );
 
     provider->setObjectName(source);
-    provider->checkForNewPhoto();
+    provider->restore( 10000 /*TODO: How to get interval??? */ );
 
     setData( source, DataEngine::Data() );
 
@@ -87,6 +87,15 @@ bool PhotoOfTheDay::sourceRequestEvent(const QString& source)
     } );
 
     return true;
+}
+
+bool PhotoOfTheDay::updateSourceEvent(const QString &source)
+{
+    if( m_instances.contains( source ) ) {
+        m_instances.value(source)->checkForNewPhoto();
+    }
+
+    return false;
 }
 
 

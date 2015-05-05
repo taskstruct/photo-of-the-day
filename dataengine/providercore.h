@@ -57,6 +57,10 @@ public:
     ProviderCore(QObject* parent = 0, const QVariantList& args = QVariantList() );
     
     virtual void checkForNewPhoto() = 0;
+
+    ///@brief Restores data from cache if time since last update is smaller than update interval
+    ///@param interval Update interval in milliseconds
+    bool restore(int interval);
     
 Q_SIGNALS:
     void newPhotoAvailable( const Plasma::DataEngine::Data data );
