@@ -36,7 +36,7 @@
 
 #include <QDebug>
 
-K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-stevesdigicams.json", StevesDigicamsProvider )
+K_EXPORT_PLASMA__PHOTOOFTHEDAYPROVIDER_WITH_JSON( stevesdigicams, StevesDigicamsProvider, "photooftheday-provider-stevesdigicams.json" )
 
 //==========
 StevesDigicamsProvider::StevesDigicamsProvider(QObject *parent, const QVariantList &args):

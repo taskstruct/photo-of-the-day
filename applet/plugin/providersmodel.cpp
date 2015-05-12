@@ -1,7 +1,8 @@
+#include <algorithm>
+
 #include <QtGui/QIcon>
 
-#include <KServiceTypeTrader>
-#include <KSycoca>
+#include <KService/KPluginTrader>
 
 #include "providersmodel.h"
 
@@ -9,7 +10,7 @@
 
 ProvidersModel::ProvidersModel(QObject* parent): QAbstractListModel(parent)
 {
-    m_providers = KServiceTypeTrader::self()->query(QLatin1String( "PhotoOfTheDay/Plugin" ));
+    m_providers = KPluginTrader::self()->query( "plasma/dataengine/photooftheday", "PhotoOfTheDay/Plugin", "'' != [X-KDE-PhotoOfTheDayPlugin-Identifier]" );
 }
 
 ProvidersModel::~ProvidersModel()
@@ -22,9 +23,9 @@ QVariant ProvidersModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
     
-    KService::Ptr s = m_providers.at(index.row());
+    auto p = m_providers.at(index.row());
     
-    if( !s->isValid() ) {
+    if( !p.isValid() ) {
         return QVariant();
     }
     
@@ -33,22 +34,22 @@ QVariant ProvidersModel::data(const QModelIndex &index, int role) const
     switch( role ) {
         case Qt::DisplayRole:
         case RealNameRole: {
-            v.setValue<QString>( s->name() );
+            v.setValue<QString>( p.name() );
             break;
         }
         
         case Qt::DecorationRole: {
-            v.setValue<QIcon>( QIcon::fromTheme( s->icon() ) );
+            v.setValue<QIcon>( QIcon::fromTheme( p.icon() ) );
             break;
         }
         
         case Qt::ToolTipRole: {
-            v.setValue<QString>( s->comment() );
+            v.setValue<QString>( p.comment() );
             break;
         }
         
         case PluginNameRole: {
-            v.setValue<QString>( s->property(QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" ), QVariant::String).toString() );
+            v.setValue<QString>( p.property( QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" ) ).toString() );
         }
         
         default: break;
@@ -76,30 +77,26 @@ int ProvidersModel::rowCount(const QModelIndex &parent) const
 
 int ProvidersModel::getIndex(const QString& pluginName)
 {
-    qDebug() << "getIndex for '" << pluginName << '\'';
+    qDebug() << "ProvidersModel::getIndex() for plugin" << pluginName;
     
     if( pluginName.isEmpty() ) {
         return -1;
     }
+
+    auto iter = std::find_if( m_providers.cbegin(), m_providers.cend(), [&pluginName]( const KPluginInfo& p ) {
+        return ( p.property( QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" ) ).toString() == pluginName );
+    } );
     
-    const int length = m_providers.size();
-    int index = -1;
-    
-    for( int i = 0; i < length; ++i )
-    {
-        const KService::Ptr s = m_providers.at(i);
-        
-        if( s->property(QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" )).toString() == pluginName ) {
-            index = i;
-        }
+    if( m_providers.cend() != iter ) {
+        return iter - m_providers.cbegin();
+    } else {
+        return -1;
     }
-    
-    return index;
 }
 
 QString ProvidersModel::getPluginName(int index)
 {
-    qDebug() << "getPluginName for " << index;
+    qDebug() << "ProvidersModel::getPluginName() index " << index;
     
     if( index < 0 ) {
         return QString();
@@ -109,9 +106,9 @@ QString ProvidersModel::getPluginName(int index)
         return QString();
     }
 
-    const QString name = m_providers.at(index)->property(QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" )).toString();
+    const QString name = m_providers.at(index).property( QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" ) ).toString();
     
-    qDebug() << "getPluginName() name is " << name;
+    qDebug() << "ProvidersModel::getPluginName() returns " << name;
 
     return name;
 }

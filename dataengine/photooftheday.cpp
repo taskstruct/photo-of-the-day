@@ -4,16 +4,18 @@
 
 #include <QDebug>
 
-#include <KServiceTypeTrader>
-#include <KSycoca>
+#include <KService/KPluginTrader>
 
 #include "providercore.h"
 #include "potddatacontainer.h"
 #include "photooftheday.h"
 
-K_EXPORT_PLASMA_DATAENGINE_WITH_JSON(photooftheday, PhotoOfTheDay, "plasma-dataengine-photooftheday.json");
+K_EXPORT_PLASMA_DATAENGINE_WITH_JSON(photooftheday, PhotoOfTheDay, "plasma-dataengine-photooftheday.json")
 
-static constexpr QLatin1String _providersSourceName("Providers");
+static constexpr QLatin1String cProvidersSourceName("Providers");
+
+static constexpr QLatin1String cProviderDirectory("plasma/dataengine/photooftheday");
+static constexpr QLatin1String cServiceType("PhotoOfTheDay/Plugin");
 
 inline const QString providerFromSource(const QString &source) {
     return source.split(':').at(0);
@@ -22,19 +24,20 @@ inline const QString providerFromSource(const QString &source) {
 PhotoOfTheDay::PhotoOfTheDay(QObject* parent, const QVariantList& args): Plasma::DataEngine(parent, args)
 {    
     // set up Providers DataSource
-    KService::List services = KServiceTypeTrader::self()->query(QLatin1String( "PhotoOfTheDay/Plugin" ));
+    auto providersList = KPluginTrader::self()->query( cProviderDirectory, cServiceType, "'' != [X-KDE-PhotoOfTheDayPlugin-Identifier]" );
     
-    for( const KService::Ptr &service: services )
+    for( const auto &provider: providersList )
     {
-        const QString provider = service->property(QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" ), QVariant::String).toString();
-        setData( _providersSourceName, provider, service->name() );
+        const QString id = provider.property( QLatin1String( "X-KDE-PhotoOfTheDayPlugin-Identifier" ) ).toString();
+
+        setData( cProvidersSourceName, id, provider.name() );
     }
     
-    if( services.isEmpty() ) {
-        setData( _providersSourceName, Plasma::DataEngine::Data() );
+    if( providersList.isEmpty() ) {
+        setData( cProvidersSourceName, Plasma::DataEngine::Data() );
     }
     
-    //TODO: Listen for changes with void KSycoca::databaseChanged (   const QStringList &     changedResources    )   
+    //TODO: Listen for changes with QFileSystemWatcher
 
     // remove unused providers
     connect( this, &PhotoOfTheDay::sourceRemoved, [this](const QString &source) {
@@ -54,20 +57,27 @@ bool PhotoOfTheDay::sourceRequestEvent(const QString& source)
 {   
     QString constraint = QString(QLatin1String("[X-KDE-PhotoOfTheDayPlugin-Identifier] == '%1'")).arg(source);
 
-    KService::List services = KServiceTypeTrader::self()->query(QLatin1String( "PhotoOfTheDay/Plugin" ), constraint );
+    auto providersList = KPluginTrader::self()->query( cProviderDirectory, cServiceType, constraint );
 
-    if( services.size() != 1 )
+    if( providersList.size() != 1 )
     {
         // there should be only one provider with that name
         return false;
     }
 
-    QString error;
+    KPluginLoader loader( providersList.at(0).libraryPath() );
 
-    auto provider = services.at(0)->createInstance<ProviderCore>( this, QVariantList(), &error );
+    const QVariantList argsWithMetaData = QVariantList() << loader.metaData().toVariantMap();
 
-    if(!provider) {
-        qDebug() << "Unable to create instance of " << services.at(0)->library() << " because " << error;
+    KPluginFactory* factory = loader.factory();
+    ProviderCore* provider = nullptr;
+
+    if( factory ) {
+        provider = factory->create<ProviderCore>(this, argsWithMetaData);
+    }
+
+    if( !provider ) {
+        qDebug() << "Unable to create provider for source '" << source << "'";
         return false;
     }
 

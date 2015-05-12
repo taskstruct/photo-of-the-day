@@ -36,7 +36,7 @@
 
 #include <QDebug>
 
-K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-earthshots.json", EarthshotsProvider )
+K_EXPORT_PLASMA__PHOTOOFTHEDAYPROVIDER_WITH_JSON( earthshots, EarthshotsProvider, "photooftheday-provider-earthshots.json" )
 
 //==========
 EarthshotsProvider::EarthshotsProvider(QObject *parent, const QVariantList &args):

@@ -36,7 +36,7 @@
 
 #include <QDebug>
 
-K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-natgeo.json", NatGeoProvider )
+K_EXPORT_PLASMA__PHOTOOFTHEDAYPROVIDER_WITH_JSON( natgeo, NatGeoProvider, "photooftheday-provider-natgeo.json" )
 
 //===== helper function =====
 

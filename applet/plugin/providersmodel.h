@@ -3,7 +3,7 @@
 
 #include <QtCore/QAbstractListModel>
 
-#include <KService>
+#include <KService/KPluginInfo>
 
 class ProvidersModel : public QAbstractListModel
 {
@@ -22,20 +22,15 @@ public:
     int rowCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
     
-//     void update();
-    
     Q_INVOKABLE int getIndex(const QString &pluginName);
     Q_INVOKABLE QString getPluginName(int index);
-    
-// Q_SIGNALS:
-//     void selectedTimeZonesChanged();
     
 protected:
     QHash<int, QByteArray> roleNames() const;
     
 private:
     
-    KService::List m_providers;
+    KPluginInfo::List m_providers;
 };
 
 #endif // PROVIDERSMODEL_H

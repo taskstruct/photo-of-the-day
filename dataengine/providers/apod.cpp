@@ -38,7 +38,7 @@
 
 #include <QDebug>
 
-K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-apod.json", ApodProvider )
+K_EXPORT_PLASMA__PHOTOOFTHEDAYPROVIDER_WITH_JSON( apod, ApodProvider, "photooftheday-provider-apod.json" )
 
 //===== helper function =====
 static QString getTitle( const QString& data )

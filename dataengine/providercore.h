@@ -81,4 +81,8 @@ protected:
 K_PLUGIN_FACTORY(factory, registerPlugin<classname>();) \
 K_EXPORT_PLUGIN_VERSION(1.0)
 
+#define K_EXPORT_PLASMA__PHOTOOFTHEDAYPROVIDER_WITH_JSON(libname, classname, jsonFile) \
+    K_PLUGIN_FACTORY_WITH_JSON(factory, jsonFile, registerPlugin<classname>();) \
+    K_EXPORT_PLUGIN_VERSION(PLASMA_VERSION)
+
 #endif // POTDPROVIDER_H

@@ -36,7 +36,7 @@
 
 #include <QDebug>
 
-K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-interfacelift.json", InterfaceliftProvider )
+K_EXPORT_PLASMA__PHOTOOFTHEDAYPROVIDER_WITH_JSON( interfacelift , InterfaceliftProvider, "photooftheday-provider-interfacelift.json" )
 
 //==========
 InterfaceliftProvider::InterfaceliftProvider(QObject *parent, const QVariantList &args):

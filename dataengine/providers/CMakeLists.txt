@@ -10,7 +10,7 @@ kcoreaddons_desktop_to_json(photooftheday_provider_natgeo photooftheday-provider
 
 target_link_libraries(photooftheday_provider_natgeo photooftheday_providercore KF5::KIOCore KF5::I18n KF5::CoreAddons )
 
-install(TARGETS photooftheday_provider_natgeo DESTINATION ${PLUGIN_INSTALL_DIR} )
+install(TARGETS photooftheday_provider_natgeo DESTINATION ${KDE_INSTALL_PLUGINDIR}/plasma/dataengine/photooftheday )
 install(FILES photooftheday-provider-natgeo.desktop DESTINATION ${SERVICES_INSTALL_DIR})
 
 
@@ -24,7 +24,7 @@ kcoreaddons_desktop_to_json(photooftheday_provider_apod photooftheday-provider-a
 
 target_link_libraries(photooftheday_provider_apod photooftheday_providercore KF5::KIOCore KF5::I18n KF5::CoreAddons )
 
-install(TARGETS photooftheday_provider_apod DESTINATION ${PLUGIN_INSTALL_DIR} )
+install(TARGETS photooftheday_provider_apod DESTINATION ${KDE_INSTALL_PLUGINDIR}/plasma/dataengine/photooftheday )
 install(FILES photooftheday-provider-apod.desktop DESTINATION ${SERVICES_INSTALL_DIR})
 
 ########### Earth Shots ############
@@ -37,7 +37,7 @@ kcoreaddons_desktop_to_json(photooftheday_provider_earthshots photooftheday-prov
 
 target_link_libraries(photooftheday_provider_earthshots photooftheday_providercore KF5::KIOCore KF5::I18n KF5::CoreAddons )
 
-install(TARGETS photooftheday_provider_earthshots DESTINATION ${PLUGIN_INSTALL_DIR} )
+install(TARGETS photooftheday_provider_earthshots DESTINATION ${KDE_INSTALL_PLUGINDIR}/plasma/dataengine/photooftheday )
 install(FILES photooftheday-provider-earthshots.desktop DESTINATION ${SERVICES_INSTALL_DIR})
 
 ########### Interfacelift ############
@@ -50,7 +50,7 @@ kcoreaddons_desktop_to_json(photooftheday_provider_interfacelift photooftheday-p
 
 target_link_libraries(photooftheday_provider_interfacelift photooftheday_providercore KF5::KIOCore KF5::I18n KF5::CoreAddons )
 
-install(TARGETS photooftheday_provider_interfacelift DESTINATION ${PLUGIN_INSTALL_DIR} )
+install(TARGETS photooftheday_provider_interfacelift DESTINATION ${KDE_INSTALL_PLUGINDIR}/plasma/dataengine/photooftheday )
 install(FILES photooftheday-provider-interfacelift.desktop DESTINATION ${SERVICES_INSTALL_DIR})
 
 ########### Steve's Digicams ############
@@ -62,7 +62,7 @@ kcoreaddons_desktop_to_json(photooftheday_provider_stevesdigicams photooftheday-
 
 target_link_libraries(photooftheday_provider_stevesdigicams photooftheday_providercore KF5::KIOCore KF5::I18n KF5::CoreAddons )
 
-install(TARGETS photooftheday_provider_stevesdigicams DESTINATION ${PLUGIN_INSTALL_DIR} )
+install(TARGETS photooftheday_provider_stevesdigicams DESTINATION ${KDE_INSTALL_PLUGINDIR}/plasma/dataengine/photooftheday )
 install(FILES photooftheday-provider-stevesdigicams.desktop DESTINATION ${SERVICES_INSTALL_DIR})
 
 ########### Bonjour Madame ############
@@ -75,7 +75,7 @@ install(FILES photooftheday-provider-stevesdigicams.desktop DESTINATION ${SERVIC
 
     target_link_libraries(photooftheday_provider_bonjourmadame photooftheday_providercore KF5::KIOCore KF5::I18n KF5::CoreAddons )
 
-    install(TARGETS photooftheday_provider_bonjourmadame DESTINATION ${PLUGIN_INSTALL_DIR} )
+    install(TARGETS photooftheday_provider_bonjourmadame DESTINATION ${KDE_INSTALL_PLUGINDIR}/plasma/dataengine/photooftheday )
     install(FILES photooftheday-provider-bonjourmadame.desktop DESTINATION ${SERVICES_INSTALL_DIR})
 #endif()
 ########### Wikimedia ############

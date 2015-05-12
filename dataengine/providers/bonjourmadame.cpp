@@ -36,7 +36,7 @@
 
 #include <QDebug>
 
-K_EXPORT_PLASMA_PHOTOOFTHEDAYPROVIDER( "photooftheday-provider-bonjourmadame.json", BonjourMadameProvider )
+K_EXPORT_PLASMA__PHOTOOFTHEDAYPROVIDER_WITH_JSON( bonjourmadame, BonjourMadameProvider, "photooftheday-provider-bonjourmadame.json" )
 
 static const QUrl cBonjourMadameUrl = QUrl(QLatin1String("http://www.bonjourmadame.fr/"));
 
