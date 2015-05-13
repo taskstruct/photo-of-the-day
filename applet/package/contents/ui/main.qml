@@ -1,4 +1,5 @@
-import QtQuick 2.0
+import QtQuick 2.4
+import QtQuick.Layouts 1.1
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.kquickcontrolsaddons 2.0
@@ -8,8 +9,10 @@ import org.task_struct.private.photooftheday 1.0
 Item {
     id: rootItem
     
+    // 16:10
     width: 400
-    height: 400
+    height: 250
+
     
     // Configuration
     property bool showShadowCfg: Plasmoid.configuration.showShadow
@@ -28,7 +31,6 @@ Item {
     // logic
     property string selectedProviderCfg: Plasmoid.configuration.selectedProvider
     property int updateIntervalCgf: Plasmoid.configuration.updateInterval
-    property real _strenght: 0.0
     
     // constants
     readonly property int __animationsDuration: 2000
@@ -51,7 +53,12 @@ Item {
         onPixmapChanged: {
             console.debug( "Photo.nativeWidth = ", nativeWidth )
             console.debug( "Photo.nativeHeight = ", nativeHeight )
-            rootItem.calcNewSize()
+
+            if( !photo.null ) {
+                var newSize = rootItem.rescale()
+                console.debug("onPixmapChanged ", newSize.width, ",", newSize.height, " ? ", animatedTransitionsCfg)
+                rootItem.newSizeUpdated( newSize )
+            }
         }
     }
 
@@ -89,25 +96,30 @@ Item {
 //         Plasmoid.aspectRatioMode = Plasmoid.KeepAspectRatio
     }
 
-    function calcNewSize() {
-        var maxSize = Math.max( plasmoid.width, plasmoid.height )
+    function rescale() {
+        var rw = rootItem.height * photo.nativeWidth / photo.nativeHeight
 
-        console.debug("Plasmoid size is ", Qt.size( plasmoid.width, plasmoid.height ) )
+        console.debug("RESCALE: rootItem = ", rootItem.width, ",", rootItem.height )
+        console.debug("RESCALE: plasmoid = ", plasmoid.width, ",", plasmoid.height )
+        console.debug("RESCALE: rw = ", rw)
 
-        var newSize = Qt.size( 0, 0 )
+        var size;
 
-        if( photo.nativeWidth >= photo.nativeHeight ) {
-            newSize.width = maxSize
-            newSize.height = maxSize * ( photo.nativeHeight / photo.nativeWidth )
+        if(rw <= plasmoid.width) {
+            size = Qt.size( rw, plasmoid.height )
+        } else {
+            size = Qt.size( plasmoid.width, plasmoid.width * photo.nativeHeight / photo.nativeWidth )
         }
-        else {
-            newSize.height = maxSize
-            newSize.width = maxSize * ( photo.nativeWidth / photo.nativeHeight )
-        }
 
-        console.debug("New plasmoid size is ", newSize)
+        console.debug("RESCALE: size = ", size.width, ",", size.height)
 
-        newSizeUpdated(newSize)
+        return size
+    }
+
+    function updateDrawingArea() {
+        var newSize = rescale()
+        drawingArea.width = newSize.width
+        drawingArea.height = newSize.height
     }
     
     onSelectedProviderCfgChanged: {
@@ -122,9 +134,10 @@ Item {
     }
 
     onNewSizeUpdated: {
+        console.debug("onNewSizeUpdated ", newSize.width, ",", newSize.height, " ? ", animatedTransitionsCfg)
         if( !animatedTransitionsCfg ) {
-            plasmoid.width = newSize.width
-            plasmoid.height = newSize.height
+            drawingArea.width = newSize.width
+            drawingArea.height = newSize.height
         } else {
             plasmoidWidthAnim.to = newSize.width
             plasmoidHeightAnim.to = newSize.height
@@ -133,77 +146,89 @@ Item {
         }
     }
 
-    BorderImage {
-        id: shadow
+    Plasmoid.onWidthChanged: updateDrawingArea()
+    Plasmoid.onHeightChanged: updateDrawingArea()
 
-        // color/size/strength
-        source: "image://shadow/" + shadowColorCfg+ "/" + shadowWidthCfg + "/" + roundedCornersCfg + "/" + shadowSpreadCfg
+    // This item always have the same aspect ratio as current photo image and tries to be as big as possible inside of applet
+    Item {
+        id: drawingArea
 
-        visible: showShadowCfg
+        BorderImage {
+            id: shadow
 
-        property int borderWidth: Math.max( shadowWidthCfg + roundedCornersCfg )
+            // color/size/strength
+            source: "image://shadow/" + shadowColorCfg+ "/" + shadowWidthCfg + "/" + roundedCornersCfg + "/" + shadowSpreadCfg
 
-        border {
-            left: borderWidth
-            right: borderWidth
-            top: borderWidth
-            bottom: borderWidth
+            visible: showShadowCfg
+
+            property int borderWidth: Math.max( shadowWidthCfg + roundedCornersCfg )
+
+            border {
+                left: borderWidth
+                right: borderWidth
+                top: borderWidth
+                bottom: borderWidth
+            }
+
+            anchors.fill: parent
         }
 
-        anchors.fill: parent
-    }
-    
-    Rectangle {
-        id: border
-        
-        color: "transparent"
-        
-        opacity: showBorderCfg ? borderOpacityCfg : 1.0
+        Rectangle {
+            id: border
 
-        radius: roundedCornersCfg
+            color: "transparent"
 
-        onRadiusChanged: console.debug("Border radius is", radius)
-        
-        border.width: showBorderCfg ? borderWidthCfg : 1
-        border.color: showBorderCfg ? borderColorCfg : "black"
-        
-        anchors.fill: showShadowCfg ? shadow : parent
-        anchors.margins: showShadowCfg ? shadowWidthCfg : 0
-    }
-    
-    Rectangle {
-        id: photoItem
+            opacity: showBorderCfg ? borderOpacityCfg : 1.0
 
-        color: "white"
-        radius: border.radius - border.border.width //TODO if border is disabled than get from shadow and than global
-        
-        anchors.fill: border
-        anchors.margins: border.border.width
+            radius: roundedCornersCfg
 
-        layer.enabled: true
-        layer.effect: ShaderEffect {
-            id: shaderEffect
+            onRadiusChanged: console.debug("Border radius is", radius)
 
-            property var photoSource: photo.null ? blank : photo
-            property var prevSource: photoBuffer.null ? blank : photoBuffer
-            property real strenght: rootItem._strenght
+            border.width: showBorderCfg ? borderWidthCfg : 1
+            border.color: showBorderCfg ? borderColorCfg : "black"
 
-            fragmentShader: "
-                    uniform lowp sampler2D source; // this item used as mask
-                    uniform lowp sampler2D photoSource; // photo item
-                    uniform lowp sampler2D prevSource; // previous photo
-                    uniform lowp float strenght;
-                    uniform lowp float qt_Opacity; // inherited opacity of this item
-                    varying highp vec2 qt_TexCoord0;
-                    void main() {
-                        lowp vec4 m = texture2D(source, qt_TexCoord0);
-                        lowp vec4 s = texture2D(photoSource, qt_TexCoord0);
-                        lowp vec4 d = texture2D(prevSource, qt_TexCoord0);
+            anchors.fill: showShadowCfg ? shadow : parent
+            anchors.margins: showShadowCfg ? shadowWidthCfg : 0
+        }
 
-                        lowp vec4 mixed = s * ( 1.0 - strenght ) + d * strenght;
+        Rectangle {
+            id: photoItem
 
-                        gl_FragColor = mixed * m.a * qt_Opacity;
-                    }"
+            color: "white"
+            radius: border.radius - border.border.width //TODO if border is disabled than get from shadow and than global
+
+            anchors.fill: border
+            anchors.margins: border.border.width
+
+            property real strenght: 1.0
+
+            layer.enabled: true
+            layer.effect: ShaderEffect {
+                id: shaderEffect
+
+                blending: false
+
+                property var photoSource: photo.null ? blank : photo
+                property var prevSource: photoBuffer.null ? blank : photoBuffer
+                property real strenght: photoItem.strenght
+
+                fragmentShader: "
+                        uniform lowp sampler2D source; // this item used as mask
+                        uniform lowp sampler2D photoSource; // photo item
+                        uniform lowp sampler2D prevSource; // previous photo
+                        uniform lowp float strenght;
+                        uniform lowp float qt_Opacity; // inherited opacity of this item
+                        varying highp vec2 qt_TexCoord0;
+                        void main() {
+                            lowp vec4 m = texture2D(source, qt_TexCoord0);
+                            lowp vec4 s = texture2D(photoSource, qt_TexCoord0);
+                            lowp vec4 d = texture2D(prevSource, qt_TexCoord0);
+
+                            lowp vec4 mixed = s * ( 1.0 - strenght ) + d * strenght;
+
+                            gl_FragColor = mixed * m.a * qt_Opacity;
+                        }"
+            }
         }
     }
 
@@ -211,7 +236,7 @@ Item {
         id: toolTip
         icon: "image"
 
-        anchors.fill: parent
+        anchors.fill: drawingArea
 
         ButtonBar {
             //            anchors.right: parent.right
@@ -259,21 +284,21 @@ Item {
 
         NumberAnimation {
             id: plasmoidWidthAnim
-            target: plasmoid
+            target: drawingArea
             property: "width"
             duration: __animationsDuration
         }
 
         NumberAnimation {
             id: plasmoidHeightAnim
-            target: plasmoid
+            target: drawingArea
             property: "height"
             duration: __animationsDuration
         }
 
         NumberAnimation {
-            target: rootItem
-            property: "_strenght"
+            target: photoItem
+            property: "strenght"
             duration: __animationsDuration
             from: 1.0; to: 0.0
         }
