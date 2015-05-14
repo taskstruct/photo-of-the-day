@@ -12,7 +12,6 @@ Item {
     // 16:10
     width: 400
     height: 250
-
     
     // Configuration
     property bool showShadowCfg: Plasmoid.configuration.showShadow
@@ -51,12 +50,10 @@ Item {
         layer.smooth: true
 
         onPixmapChanged: {
-            console.debug( "Photo.nativeWidth = ", nativeWidth )
-            console.debug( "Photo.nativeHeight = ", nativeHeight )
+            console.debug( "Photo.nativeSize = ", nativeWidth, "x", nativeHeight )
 
             if( !photo.null ) {
                 var newSize = rootItem.rescale()
-                console.debug("onPixmapChanged ", newSize.width, ",", newSize.height, " ? ", animatedTransitionsCfg)
                 rootItem.newSizeUpdated( newSize )
             }
         }
@@ -87,21 +84,14 @@ Item {
     }
     
     Plasmoid.backgroundHints: Plasmoid.NoBackground
-//     Plasmoid.aspectRatioMode: Plasmoid.Square NOTE: Not implemented in KF5...
     
     Component.onCompleted: {
-        console.debug( "Component.onCompleted" )
-        plasmoid.setConfigurationRequired( selectedProviderCfg === "", i18n("No provider is specified") )
-//         plasmoid.setConfigurationRequired( selectedProviderCfg.length == 0, i18n("No provider is specified") )
-//         Plasmoid.aspectRatioMode = Plasmoid.KeepAspectRatio
+        drawingArea.width = rootItem.width
+        drawingArea.height = rootItem.height
     }
 
     function rescale() {
         var rw = rootItem.height * photo.nativeWidth / photo.nativeHeight
-
-        console.debug("RESCALE: rootItem = ", rootItem.width, ",", rootItem.height )
-        console.debug("RESCALE: plasmoid = ", plasmoid.width, ",", plasmoid.height )
-        console.debug("RESCALE: rw = ", rw)
 
         var size;
 
@@ -110,8 +100,6 @@ Item {
         } else {
             size = Qt.size( plasmoid.width, plasmoid.width * photo.nativeHeight / photo.nativeWidth )
         }
-
-        console.debug("RESCALE: size = ", size.width, ",", size.height)
 
         return size
     }
@@ -123,7 +111,6 @@ Item {
     }
     
     onSelectedProviderCfgChanged: {
-//        console.debug("New selected provider: ", selectedProviderCfg)
         if( selectedProviderCfg.length != 0 ) {
             _providerSource = selectedProviderCfg;
             
@@ -134,15 +121,15 @@ Item {
     }
 
     onNewSizeUpdated: {
-        console.debug("onNewSizeUpdated ", newSize.width, ",", newSize.height, " ? ", animatedTransitionsCfg)
-        if( !animatedTransitionsCfg ) {
-            drawingArea.width = newSize.width
-            drawingArea.height = newSize.height
-        } else {
+        if( animatedTransitionsCfg ) {
             plasmoidWidthAnim.to = newSize.width
             plasmoidHeightAnim.to = newSize.height
 
             transitionAnimation.start()
+
+        } else {
+            drawingArea.width = newSize.width
+            drawingArea.height = newSize.height
         }
     }
 
@@ -181,8 +168,6 @@ Item {
             opacity: showBorderCfg ? borderOpacityCfg : 1.0
 
             radius: roundedCornersCfg
-
-            onRadiusChanged: console.debug("Border radius is", radius)
 
             border.width: showBorderCfg ? borderWidthCfg : 1
             border.color: showBorderCfg ? borderColorCfg : "black"
@@ -260,11 +245,11 @@ Item {
             
             if( _providerSource == sourceName ) {
 
+                plasmoid.busy = false
+
                 if( undefined === data.Photo ) {
                     return
                 }
-
-                plasmoid.busy = false
                 
                 // set current image as back
                 photoBuffer.pixmap = photo.pixmap
@@ -275,6 +260,10 @@ Item {
                 toolTipArea.mainText = data.Title
             }
         }
+    }
+
+    ConfigureView {
+        visible: selectedProviderCfg == ""
     }
 
     ParallelAnimation {
@@ -300,6 +289,5 @@ Item {
             duration: __animationsDuration
             from: 1.0; to: 0.0
         }
-
     }
 }
