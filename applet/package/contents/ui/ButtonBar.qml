@@ -1,6 +1,7 @@
-import QtQuick 2.0
+import QtQuick 2.4
 import QtQuick.Layouts 1.1
 import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.plasma.extras 2.0 as PlasmaExtras
 
 Item {
     id: buttonBar
@@ -8,13 +9,14 @@ Item {
     implicitWidth: buttonsRow.width
     implicitHeight: buttonsRow.height
 
-    opacity: 0
+    opacity: 0.0
+    visible: false
 
     RowLayout
     {
         id: buttonsRow
 
-        PlasmaComponents.ToolButton
+        PlasmaComponents.Button
         {
             iconSource: "go-previous"
 
@@ -49,7 +51,7 @@ Item {
             }
         }
 
-        PlasmaComponents.ToolButton {
+        PlasmaComponents.Button {
             iconSource: "go-next"
 
             enabled: selectedProviderCfg.length != 0
@@ -83,32 +85,32 @@ Item {
             }
         }
 
-        PlasmaComponents.ToolButton {
+        PlasmaComponents.Button {
             iconSource: "go-home"
 
             onClicked: {
-//                photoBuffer.source = photo.source
-//                photo.source = "/home/nikolay/Свалени/walls/1509102.jpg"
-
-////                console.debug("photoBuffer = ", photoBuffer.source)
-////                console.debug("photo = ", photo.source)
-//                border.visible = !border.visible
-//                photoItem.visible = !photoItem.visible
-                console.debug("Plasmoid object dump:")
-                for( var key in plasmoid ) {
-                    console.debug( key," = ", plasmoid[key] )
-                }
             }
         }
     }
 
     states: State {
-        name: "show"; when: buttonBar.visible
-        PropertyChanges { target: buttonBar; opacity: 1; }
+        name: "show"; when: toolTipArea.containsMouse
     }
 
-    transitions: Transition {
-        from: ""; to: "show"; reversible: true
-        NumberAnimation { target: buttonBar; properties: "opacity"; duration: 2000 /*units.longDuration*/; easing.type: Easing.InOutQuad }
-    }
+    transitions: [ Transition {
+            from: ""; to: "show";
+
+            PlasmaExtras.AppearAnimation {
+                targetItem: buttonBar
+            }
+        },
+
+        Transition {
+            from: "show"; to: "";
+
+            PlasmaExtras.DisappearAnimation {
+                targetItem: buttonBar
+            }
+        }
+    ]
 }

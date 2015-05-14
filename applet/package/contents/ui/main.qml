@@ -233,14 +233,12 @@ Item {
     }
 
     PlasmaCore.ToolTipArea {
-        id: toolTip
+        id: toolTipArea
         icon: "image"
 
         anchors.fill: drawingArea
 
         ButtonBar {
-            //            anchors.right: parent.right
-            visible: toolTip.containsMouse
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.margins: photoItem.x + 2
@@ -274,7 +272,7 @@ Item {
                 // load new image
                 photo.pixmap = data.Photo
 
-                toolTip.mainText = data.Title
+                toolTipArea.mainText = data.Title
             }
         }
     }
