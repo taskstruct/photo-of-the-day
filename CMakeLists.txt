@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
-set(REQUIRED_QT_VERSION 5.8.0)
+set(QT_MIN_VERSION 5.4.0)
 set(KF5_MIN_VERSION 5.8.0)
 
 find_package(ECM 5.8.0 REQUIRED NO_MODULE)
