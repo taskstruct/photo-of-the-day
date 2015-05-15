@@ -41,6 +41,7 @@ PhotoOfTheDay::PhotoOfTheDay(QObject* parent, const QVariantList& args): Plasma:
 
     // remove unused providers
     connect( this, &PhotoOfTheDay::sourceRemoved, [this](const QString &source) {
+        qDebug() << "Source removed: " << source;
         if( this->m_instances.contains(source) ) {
             auto provider = this->m_instances.value(source);
             this->m_instances.remove(source);
@@ -55,6 +56,8 @@ PhotoOfTheDay::PhotoOfTheDay(QObject* parent, const QVariantList& args): Plasma:
 
 bool PhotoOfTheDay::sourceRequestEvent(const QString& source)
 {   
+    qDebug() << "PhotoOfTheDay::sourceRequestEvent for source: " << source;
+
     QString constraint = QString(QLatin1String("[X-KDE-PhotoOfTheDayPlugin-Identifier] == '%1'")).arg(source);
 
     auto providersList = KPluginTrader::self()->query( cProviderDirectory, cServiceType, constraint );
@@ -84,9 +87,10 @@ bool PhotoOfTheDay::sourceRequestEvent(const QString& source)
     m_instances.insert( source, provider );
 
     provider->setObjectName(source);
-    provider->restore( 10000 /*TODO: How to get interval??? */ );
 
-    setData( source, DataEngine::Data() );
+    /*TODO: How to get update interval */
+    // Restore only if cache is no more than 1h old
+    setData( source, provider->restore( 60*60*1000 ) );
 
     connect( provider, &ProviderCore::newPhotoAvailable, [this, provider]( const Plasma::DataEngine::Data data ) {
         this->setData( provider->objectName(), data );
@@ -101,6 +105,7 @@ bool PhotoOfTheDay::sourceRequestEvent(const QString& source)
 
 bool PhotoOfTheDay::updateSourceEvent(const QString &source)
 {
+    qDebug() << "PhotoOfTheDay::updateSourceEvent: " << source;
     if( m_instances.contains( source ) ) {
         m_instances.value(source)->checkForNewPhoto();
     }

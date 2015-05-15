@@ -54,49 +54,60 @@ ProviderCore::ProviderCore(QObject *parent, const QVariantList &args):
 {
 }
 
-bool ProviderCore::restore( int interval )
+const Plasma::DataEngine::Data ProviderCore::restore( quint32 interval )
 {
     const QChar dirSep = QDir::separator();
 
     auto dirPath = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + dirSep + "photo-of-the-day" + dirSep;
 
     auto cacheFileName = dirPath + objectName() + ".cache";
+
+    if( !QFile::exists( cacheFileName ) ) {
+        // first use of this provider
+        checkForNewPhoto();
+        return Plasma::DataEngine::Data();
+    }
+
     QSettings cache( cacheFileName, QSettings::IniFormat, this );
 
     QDateTime lastUpdate = cache.value( "LastUpdate", QDateTime() ).toDateTime();
 
     if( !lastUpdate.isValid() ) {
         checkForNewPhoto();
-        return false;
+        return Plasma::DataEngine::Data();
     }
 
-    const quint64 elapsedTime = QDateTime::currentDateTime().msecsTo( lastUpdate );
+    const auto elapsedTime = lastUpdate.msecsTo( QDateTime::currentDateTime() );
 
     if( ( elapsedTime < 0 ) || ( elapsedTime >= interval ) ) {
+        qDebug() << "LastUpdate = " << lastUpdate << " now = " << QDateTime::currentDateTime();
+        qDebug() << "elapsedTime = " << elapsedTime << "  interval = " << interval;
         checkForNewPhoto();
-        return false;
+        return Plasma::DataEngine::Data();
     }
 
-    auto photoFileName = dirPath + objectName() + ".jpeg"; //TODO: how to find extension or always save in jpg
+    auto photoFileName = dirPath + objectName() + ".jpg";
 
     if( !QFile::exists( photoFileName ) ) {
         checkForNewPhoto();
-        return false;
+        return Plasma::DataEngine::Data();
     }
 
     QPixmap photo;
 
     if( !photo.load( photoFileName ) ) {
         checkForNewPhoto();
-        return false;
+        return Plasma::DataEngine::Data();
     }
+
+    qDebug() << "Restored";
 
     m_data[cPhotoKey] = photo;
     m_data[cPhotoUrlKey] = cache.value(cPhotoUrlKey).toUrl();
     m_data[cPageUrlKey] = cache.value(cPageUrlKey).toUrl();
     m_data[cTitleKey] = cache.value(cTitleKey).toString();
 
-    return true;
+    return Plasma::DataEngine::Data(m_data);
 }
 
 void ProviderCore::downloadPhoto(const QUrl &url)
@@ -115,7 +126,7 @@ void ProviderCore::downloadPhoto(const QUrl &url)
             pixmap.loadFromData( storedJob->data(), format.data() );
 
             this->m_data[cPhotoKey] = pixmap;
-            this->savePhoto( pixmap, format.data() );
+            this->savePhoto( pixmap );
 
             emit this->photoDownloaded();
         }
@@ -125,12 +136,14 @@ void ProviderCore::downloadPhoto(const QUrl &url)
     } );
 }
 
-void ProviderCore::savePhoto(const QPixmap &pixmap, const char *format)
+void ProviderCore::savePhoto(const QPixmap &pixmap)
 {
     const QChar dirSep = QDir::separator();
     auto dirPath = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + dirSep + "photo-of-the-day" + dirSep;
-    auto photoFileName = dirPath + objectName() + '.' + format;
-    pixmap.save( photoFileName, format );
+    auto photoFileName = dirPath + objectName() + ".jpg";
+    // always save in jpg. Most(if not all) of web sites use this format. Also we don't need transparency or animated gifs
+    qDebug() << "Saving photo in " << photoFileName;
+    pixmap.save( photoFileName, "JPG" );
 }
 
 void ProviderCore::saveInCache()
@@ -140,6 +153,7 @@ void ProviderCore::saveInCache()
     auto dirPath = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + dirSep + "photo-of-the-day" + dirSep;
 
     auto cacheFileName = dirPath + objectName() + ".cache";
+    qDebug() << "Saving cache in " << cacheFileName << " at " << QDateTime::currentDateTime();
     QSettings cache( cacheFileName, QSettings::IniFormat, this );
 
     cache.setValue( cPhotoUrlKey, m_data[cPhotoUrlKey].toUrl() );

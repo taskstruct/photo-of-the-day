@@ -60,7 +60,7 @@ public:
 
     ///@brief Restores data from cache if time since last update is smaller than update interval
     ///@param interval Update interval in milliseconds
-    bool restore(int interval);
+    const Plasma::DataEngine::Data restore(quint32 interval);
     
 Q_SIGNALS:
     void newPhotoAvailable( const Plasma::DataEngine::Data data );
@@ -70,7 +70,7 @@ Q_SIGNALS:
 
 protected:
     void downloadPhoto(const QUrl &url);
-    void savePhoto(const QPixmap &pixmap, const char *format );
+    void savePhoto(const QPixmap &pixmap);
     void saveInCache();
 
     Plasma::DataEngine::Data m_data;
