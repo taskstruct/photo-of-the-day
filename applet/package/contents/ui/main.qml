@@ -29,12 +29,13 @@ Item {
     
     // logic
     property string selectedProviderCfg: Plasmoid.configuration.selectedProvider
+
+    property string __connectedProvider: ""
+
     property int updateIntervalCgf: Plasmoid.configuration.updateInterval
     
     // constants
     readonly property int __animationsDuration: 2000
-    
-    property string _providerSource: ""
 
     signal newSizeUpdated( size newSize)
 
@@ -109,15 +110,40 @@ Item {
         drawingArea.width = newSize.width
         drawingArea.height = newSize.height
     }
+
+    function setUpActions() {
+        plasmoid.setAction("nextprovider", i18n("Next provider"), "go-next")
+        plasmoid.setAction("prevprovider", i18n("Previous provider"), "go-previous")
+    }
+
+    function clearActions() {
+        plasmoid.removeAction("nextprovider")
+        plasmoid.removeAction("prevprovider")
+    }
+
+    function changeProvider( newProvider ) {
+        if( __connectedProvider != "" ) {
+            potdEngine.disconnectSource( __connectedProvider )
+        }
+
+        potdEngine.connectSource( newProvider )
+        __connectedProvider = newProvider
+    }
     
     onSelectedProviderCfgChanged: {
         if( selectedProviderCfg.length != 0 ) {
-            _providerSource = selectedProviderCfg;
             
-            potdEngine.connectSource( _providerSource )
+            console.debug("Connect to source: ", selectedProviderCfg)
+
+            changeProvider(selectedProviderCfg)
         
             Plasmoid.busy = true;
-        }   
+
+            setUpActions()
+
+        } else {
+            clearActions()
+        }
     }
 
     onNewSizeUpdated: {
@@ -235,6 +261,8 @@ Item {
         engine: "org.task_struct.photooftheday"
         connectedSources: "Providers"
         interval: updateIntervalCgf * 60000 // convert minutes to milliseconds
+
+        onIntervalChanged: console.debug("New update interval: ", updateIntervalCgf)
         
         onSourceAdded: {
             console.debug( "onSourceAdded: " + source ) 
@@ -243,7 +271,7 @@ Item {
         onNewData: {
             console.debug( "onNewData " + sourceName )
             
-            if( _providerSource == sourceName ) {
+            if( selectedProviderCfg == sourceName ) {
 
                 plasmoid.busy = false
 

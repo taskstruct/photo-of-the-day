@@ -2,6 +2,7 @@ import QtQuick 2.4
 import QtQuick.Layouts 1.1
 import org.kde.plasma.components 2.0 as PlasmaComponents
 import org.kde.plasma.extras 2.0 as PlasmaExtras
+import org.kde.plasma.plasmoid 2.0
 
 Item {
     id: buttonBar
@@ -43,11 +44,8 @@ Item {
                     i = keys.length - 1;
                 }
 
-                // remove old one
-                potdEngine.disconnectSource( selectedProviderCfg + ":" + plasmoid.id )
-
                 console.debug( "New provider is: " + keys[i] + " at " + i )
-                selectedProviderCfg = keys[i]
+                plasmoid.configuration.selectedProvider = keys[i]
             }
         }
 
@@ -57,7 +55,7 @@ Item {
             enabled: selectedProviderCfg.length != 0
 
             onClicked: {
-                Plasmoid.busy = true
+                plasmoid.busy = true
 
                 var keys = Object.keys(potdEngine.data["Providers"])
 
@@ -77,11 +75,8 @@ Item {
                     i = 0;
                 }
 
-                // remove old one
-                potdEngine.disconnectSource( selectedProviderCfg + ":" + plasmoid.id )
-
                 console.debug( "New provider is: " + keys[i] + " at " + i )
-                selectedProviderCfg = keys[i]
+                plasmoid.configuration.selectedProvider = keys[i]
             }
         }
 
