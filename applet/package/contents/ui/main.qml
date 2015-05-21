@@ -9,7 +9,7 @@ import org.task_struct.private.photooftheday 1.0
 Item {
     id: rootItem
     
-    // 16:10
+    // 16:10. This is used by Plasma for initial size, when plasmoid is shown for the first time
     width: 400
     height: 250
     
@@ -28,7 +28,7 @@ Item {
     property bool animatedTransitionsCfg: Plasmoid.configuration.animatedTransitions
     
     // logic
-    property string selectedProviderCfg: Plasmoid.configuration.selectedProvider
+    property string selectedProviderCfg: plasmoid.configuration.selectedProvider
 
     property string __connectedProvider: ""
 
@@ -55,6 +55,7 @@ Item {
 
             if( !photo.null ) {
                 var newSize = rootItem.rescale()
+                console.debug("NEW SIZE: ", newSize )
                 rootItem.newSizeUpdated( newSize )
             }
         }
@@ -85,14 +86,44 @@ Item {
     }
     
     Plasmoid.backgroundHints: Plasmoid.NoBackground
-    
-    Component.onCompleted: {
-        drawingArea.width = rootItem.width
-        drawingArea.height = rootItem.height
+
+    // HACK: Delay data source connection. Let all properties to be initialized and emit on<Property>Changed signals
+    // If we connect to data source in onSelectedProviderCfgChanged and we have valid cache in data engine,
+    // plasmoid and rootItem width and height are still 0s
+    Timer {
+        id: initTimer
+        interval: 100
+        running: true
+
+        onTriggered: {
+            drawingArea.width = rootItem.width
+            drawingArea.height = rootItem.height
+
+            if( rootItem.selectedProviderCfg != "" ) {
+                potdEngine.connectSource( rootItem.selectedProviderCfg )
+                __connectedProvider = rootItem.selectedProviderCfg
+            }
+
+            rootItem.selectedProviderCfgChanged.connect( function(fasd) {
+
+                if( rootItem.__connectedProvider != "" ) {
+                    potdEngine.disconnectSource( rootItem.__connectedProvider )
+                }
+
+                plasmoid.busy = true;
+                potdEngine.connectSource( rootItem.selectedProviderCfg )
+                rootItem.__connectedProvider = rootItem.selectedProviderCfg
+            } )
+        }
     }
 
     function rescale() {
-        var rw = rootItem.height * photo.nativeWidth / photo.nativeHeight
+
+        if( photo.null ) {
+            return Qt.size( plasmoid.width, plasmoid.height )
+        }
+
+        var rw = plasmoid.height * photo.nativeWidth / photo.nativeHeight
 
         var size;
 
@@ -121,24 +152,54 @@ Item {
         plasmoid.removeAction("prevprovider")
     }
 
-    function changeProvider( newProvider ) {
-        if( __connectedProvider != "" ) {
-            potdEngine.disconnectSource( __connectedProvider )
+    function action_nextprovider() {
+        plasmoid.busy = true
+
+        var keys = Object.keys(potdEngine.data["Providers"])
+
+        // find provider position
+        var i;
+        for( i = 0; i < keys.length; ++i ) {
+            if( keys[i] === selectedProviderCfg ) {
+                break;
+            }
         }
 
-        potdEngine.connectSource( newProvider )
-        __connectedProvider = newProvider
+        ++i; // go to next
+
+        if( i === keys.length ) {
+            // current provider is the last one. Go to first
+            i = 0;
+        }
+
+        plasmoid.configuration.selectedProvider = keys[i]
+    }
+
+    function action_prevprovider() {
+        plasmoid.busy = true
+
+        var keys = Object.keys(potdEngine.data["Providers"])
+
+        // find provider position
+        var i;
+        for( i = 0; i < keys.length; ++i ) {
+            if( keys[i] === selectedProviderCfg ) {
+                break;
+            }
+        }
+
+        --i; // go to previous
+
+        if( i < 0 ) {
+            // current provider is the first one. Go to last
+            i = keys.length - 1;
+        }
+
+        plasmoid.configuration.selectedProvider = keys[i]
     }
     
     onSelectedProviderCfgChanged: {
         if( selectedProviderCfg.length != 0 ) {
-            
-            console.debug("Connect to source: ", selectedProviderCfg)
-
-            changeProvider(selectedProviderCfg)
-        
-            Plasmoid.busy = true;
-
             setUpActions()
 
         } else {
@@ -147,6 +208,7 @@ Item {
     }
 
     onNewSizeUpdated: {
+        console.debug("onNewSizeUpdated")
         if( animatedTransitionsCfg ) {
             plasmoidWidthAnim.to = newSize.width
             plasmoidHeightAnim.to = newSize.height
@@ -214,10 +276,12 @@ Item {
             property real strenght: 1.0
 
             layer.enabled: true
+            layer.smooth: true
             layer.effect: ShaderEffect {
                 id: shaderEffect
 
                 blending: false
+                cullMode: ShaderEffect.BackFaceCulling
 
                 property var photoSource: photo.null ? blank : photo
                 property var prevSource: photoBuffer.null ? blank : photoBuffer
@@ -246,6 +310,7 @@ Item {
     PlasmaCore.ToolTipArea {
         id: toolTipArea
         icon: "image"
+        textFormat: Text.PlainText
 
         anchors.fill: drawingArea
 
@@ -286,6 +351,7 @@ Item {
                 photo.pixmap = data.Photo
 
                 toolTipArea.mainText = data.Title
+                toolTipArea.subText = potdEngine.data["Providers"][sourceName]
             }
         }
     }

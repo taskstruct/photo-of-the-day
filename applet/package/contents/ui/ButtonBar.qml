@@ -23,30 +23,7 @@ Item {
 
             enabled: selectedProviderCfg.length != 0
 
-            onClicked: {
-                plasmoid.busy = true
-
-                var keys = Object.keys(potdEngine.data["Providers"])
-
-                // find provider position
-                var i;
-                for( i = 0; i < keys.length; ++i ) {
-                    if( keys[i] === selectedProviderCfg ) {
-                        console.debug( "Provider found: " + keys[i] + " at " + i );
-                        break;
-                    }
-                }
-
-                --i; // go to next
-
-                if( i < 0 ) {
-                    // current provider is the first one. Go to last
-                    i = keys.length - 1;
-                }
-
-                console.debug( "New provider is: " + keys[i] + " at " + i )
-                plasmoid.configuration.selectedProvider = keys[i]
-            }
+            onClicked: rootItem.action_prevprovider()
         }
 
         PlasmaComponents.Button {
@@ -54,37 +31,13 @@ Item {
 
             enabled: selectedProviderCfg.length != 0
 
-            onClicked: {
-                plasmoid.busy = true
-
-                var keys = Object.keys(potdEngine.data["Providers"])
-
-                // find provider position
-                var i;
-                for( i = 0; i < keys.length; ++i ) {
-                    if( keys[i] === selectedProviderCfg ) {
-                        console.debug( "Provider found: " + keys[i] + " at " + i );
-                        break;
-                    }
-                }
-
-                ++i; // go to next
-
-                if( i === keys.length ) {
-                    // current provider is the last one. Go to first
-                    i = 0;
-                }
-
-                console.debug( "New provider is: " + keys[i] + " at " + i )
-                plasmoid.configuration.selectedProvider = keys[i]
-            }
+            onClicked: rootItem.action_nextprovider()
         }
 
         PlasmaComponents.Button {
             iconSource: "go-home"
 
-            onClicked: {
-            }
+            onClicked: Qt.openUrlExternally( potdEngine.data[rootItem.selectedProviderCfg]["PageUrl"] )
         }
     }
 
