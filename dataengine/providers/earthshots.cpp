@@ -122,9 +122,9 @@ void EarthshotsProvider::parseWebPage(const QByteArray& source)
 
     if( regExp.indexIn(data) != -1 )
     {
-        m_data[cTitleKey] = regExp.cap(1);
+        m_data[cTitleKey] = regExp.cap(2);
 
-        const QUrl pageUrl( regExp.cap(2) );
+        const QUrl pageUrl( regExp.cap(1) );
 
         if(pageUrl.isValid()) {
             m_data[cPageUrlKey] = pageUrl;

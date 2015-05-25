@@ -38,6 +38,8 @@
 
 K_EXPORT_PLASMA__PHOTOOFTHEDAYPROVIDER_WITH_JSON( interfacelift , InterfaceliftProvider, "photooftheday-provider-interfacelift.json" )
 
+static const QLatin1Literal cInterfaceliftUrl = QLatin1Literal("https://interfacelift.com/");
+
 //==========
 InterfaceliftProvider::InterfaceliftProvider(QObject *parent, const QVariantList &args):
 ProviderCore(parent, args)
@@ -47,7 +49,7 @@ ProviderCore(parent, args)
 
 void InterfaceliftProvider::checkForNewPhoto()
 {   
-    const QUrl pageUrl = QString( QLatin1Literal("https://interfacelift.com/") );
+    const QUrl pageUrl = QString( cInterfaceliftUrl );
 
     qDebug() << "IFL: requesting page";
     
@@ -98,7 +100,7 @@ void InterfaceliftProvider::parseWebPage(const QByteArray& source)
         return;
     }
 
-    const QString photoUrlString = QLatin1String("https://interfacelift.com") + regExp.cap(1);
+    const QString photoUrlString = cInterfaceliftUrl + regExp.cap(1);
     const QUrl photoUrl = QUrl( photoUrlString );
 
     if( !photoUrl.isValid() ) {
@@ -121,15 +123,15 @@ void InterfaceliftProvider::parseWebPage(const QByteArray& source)
 
     if( regExp.indexIn(data) != -1 )
     {
-        m_data[cPageUrlKey] = QUrl( QLatin1String("https://interfacelift.com/") + regExp.cap(1) );
+        m_data[cPageUrlKey] = QUrl( cInterfaceliftUrl + regExp.cap(1) );
     }
     else
     {
-        m_data[cPageUrlKey] = QUrl( QLatin1String("https://interfacelift.com/") );
+        m_data[cPageUrlKey] = QUrl( cInterfaceliftUrl );
     }
 
     // get title
-    pattern = QLatin1String("<h1>(.*?)</h1>");
+    pattern = QLatin1String("<h1>(.*) &rarr;</h1>");
     regExp.setPattern( pattern );
 
     if( regExp.indexIn(data) != -1 )
