@@ -326,12 +326,6 @@ Item {
         engine: "org.task_struct.photooftheday"
         connectedSources: "Providers"
         interval: updateIntervalCgf * 60000 // convert minutes to milliseconds
-
-        onIntervalChanged: console.debug("New update interval: ", updateIntervalCgf)
-        
-        onSourceAdded: {
-            console.debug( "onSourceAdded: " + source ) 
-        }
                 
         onNewData: {
             console.debug( "onNewData " + sourceName )
@@ -339,6 +333,10 @@ Item {
             if( selectedProviderCfg == sourceName ) {
 
                 plasmoid.busy = false
+
+                if( data.Error !== undefined &&  data.Error != "" ) {
+                    errorLabel.errorText = data.Error
+                }
 
                 if( undefined === data.Photo ) {
                     return
@@ -355,6 +353,12 @@ Item {
             }
         }
     }
+
+    ErrorLabel {
+        id: errorLabel
+        anchors.centerIn: drawingArea
+    }
+
 
     ConfigureView {
         visible: selectedProviderCfg == ""
