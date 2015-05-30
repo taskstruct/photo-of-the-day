@@ -5,7 +5,7 @@ import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.kquickcontrolsaddons 2.0
 
 import org.task_struct.private.photooftheday 1.0
- 
+
 Item {
     id: rootItem
     
@@ -280,14 +280,13 @@ Item {
             layer.effect: ShaderEffect {
                 id: shaderEffect
 
-                blending: false
                 cullMode: ShaderEffect.BackFaceCulling
 
                 property var photoSource: photo.null ? blank : photo
                 property var prevSource: photoBuffer.null ? blank : photoBuffer
                 property real strenght: photoItem.strenght
 
-                fragmentShader: "
+                property string blendingShader: "
                         uniform lowp sampler2D source; // this item used as mask
                         uniform lowp sampler2D photoSource; // photo item
                         uniform lowp sampler2D prevSource; // previous photo
@@ -301,8 +300,19 @@ Item {
 
                             lowp vec4 mixed = s * ( 1.0 - strenght ) + d * strenght;
 
-                            gl_FragColor = mixed * m.a * qt_Opacity;
+                            gl_FragColor = mixed * texture2D(source, qt_TexCoord0).a * qt_Opacity;
                         }"
+
+                property string simpleShader: "
+                        uniform lowp sampler2D source; // this item used as mask
+                        uniform lowp sampler2D photoSource; // photo item
+                        uniform lowp float qt_Opacity; // inherited opacity of this item
+                        varying highp vec2 qt_TexCoord0;
+                        void main() {
+                            gl_FragColor = texture2D(photoSource, qt_TexCoord0) * texture2D(source, qt_TexCoord0).a * qt_Opacity;
+                        }"
+
+                fragmentShader: strenght == 0.0 ? simpleShader : blendingShader
             }
         }
     }
@@ -326,7 +336,7 @@ Item {
         engine: "org.task_struct.photooftheday"
         connectedSources: "Providers"
         interval: updateIntervalCgf * 60000 // convert minutes to milliseconds
-                
+
         onNewData: {
             console.debug( "onNewData " + sourceName )
             
