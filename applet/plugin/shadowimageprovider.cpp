@@ -42,7 +42,7 @@ QImage ShadowImageProvider::requestImage(const QString &id, QSize *size, const Q
     }
 
     // get radius
-    int radius = tokens.at(1).toInt(&isValidInt);
+    int radius = tokens.at(2).toInt(&isValidInt);
 
     if(!isValidInt) {
         radius = 0;
@@ -51,7 +51,7 @@ QImage ShadowImageProvider::requestImage(const QString &id, QSize *size, const Q
     // get shadow strength
     qreal shadowStrength = tokens.at(3).toDouble(&isValidInt);
 
-    qDebug() << "shadowSize = " << shadowSize << " shadowStrength = " << shadowStrength << " shadowColor = " << shadowColor;
+//    qDebug() << "shadowSize = " << shadowSize << " shadowStrength = " << shadowStrength << " shadowColor = " << shadowColor << " radius = " <<radius;
 
     int imgSize = qMax( shadowSize, radius ) * 5;
 
