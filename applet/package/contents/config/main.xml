@@ -40,6 +40,36 @@
             <default>true</default>
         </entry>
     </group>
+
+    <group name="Content">
+        <entry name="contentType" type="String">
+            <default>image</default>
+        </entry>
+    </group>
+
+    <group name="Image">
+        <entry name="imageFileName" type="String">
+            <default></default>
+        </entry>
+        <entry name="recentImages" type="StringList">
+            <default></default>
+        </entry>
+    </group>
+
+    <group name="Slideshow">
+        <entry name="slideshowPaths" type="StringList">
+            <default></default>
+        </entry>
+        <entry name="slideshowInterval" type="UInt">
+            <default>600000</default>
+        </entry>
+        <entry name="recursiveScan" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="randomize" type="Bool">
+            <default>false</default>
+        </entry>
+    </group>
     
     <group name="Providers">
         <entry name="selectedProvider" type="String">

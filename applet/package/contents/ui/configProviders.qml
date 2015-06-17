@@ -6,12 +6,20 @@ import org.kde.plasma.plasmoid 2.0
 import org.task_struct.private.photooftheday 1.0
 
 Item {
-    id: configForm
-    width: childrenRect.width
-    height: childrenRect.height
-    
-    property string cfg_selectedProvider: ""
-    property int cfg_updateInterval: plasmoid.configuration.updateInterval
+    id: configProvidersForm
+
+    signal configurationChanged
+
+    //BEGIN functions
+    function saveConfig() {
+        console.debug("saveing provider")
+        plasmoid.configuration.selectedProvider = providersModel.getPluginName(providersBomboBox.currentIndex)
+        plasmoid.configuration.updateInterval = hoursSb.value * 60 + minsSb.value
+    }
+
+    //    function restoreConfig() {
+    //    }
+    //END functions
 
     Component.onCompleted: {
         hoursSb.value = Math.floor( plasmoid.configuration.updateInterval / 60 )
@@ -41,9 +49,7 @@ Item {
 
                 Layout.fillWidth: true
 
-                onActivated: {
-                    cfg_selectedProvider = providersModel.getPluginName(index)
-                }
+                onCurrentIndexChanged: configProvidersForm.configurationChanged()
 
                 Component.onCompleted: {
                     currentIndex = providersModel.getIndex(plasmoid.configuration.selectedProvider)
@@ -61,7 +67,7 @@ Item {
                 minimumValue: 0
                 maximumValue: 23
 
-                onValueChanged: cfg_updateInterval = value * 60 + minsSb.value
+                onValueChanged: configProvidersForm.configurationChanged()
             }
 
             Label {
@@ -73,7 +79,7 @@ Item {
                 minimumValue: hoursSb.value != 0 ? 0 : 10 // min 0h 10min
                 maximumValue: 59
 
-                onValueChanged: cfg_updateInterval = hoursSb.value * 60 + value
+                onValueChanged: configProvidersForm.configurationChanged()
             }
 
             Label {

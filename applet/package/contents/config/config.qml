@@ -10,8 +10,8 @@ ConfigModel {
     }
     
     ConfigCategory {
-        name: i18n("Providers")
-        icon: "preferences-system-network.svgz"
-        source: "configProviders.qml"
+        name: i18n("Content")
+        icon: "preferences-desktop-desktop-wallpaper.svg"
+        source: "configContent.qml"
     }
 }

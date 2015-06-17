@@ -6,7 +6,11 @@ add_definitions(-DTRANSLATION_DOMAIN=\"plasma_applet_org.task_struct.photoofthed
 find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED Qml)
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS CoreAddons Service )
 
-set( photoofthedayplugin_SRCS photoofthedayplugin.cpp providersmodel.cpp shadowimageprovider.cpp )
+set( photoofthedayplugin_SRCS photoofthedayplugin.cpp
+                              providersmodel.cpp
+                              slideshowmodel.cpp
+                              imagemodel.cpp
+                              shadowimageprovider.cpp )
 
 add_library(photoofthedayplugin SHARED ${photoofthedayplugin_SRCS})
 
