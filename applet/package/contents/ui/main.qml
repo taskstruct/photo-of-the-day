@@ -29,6 +29,8 @@ Item {
     // 16:10. This is used by Plasma for initial size, when plasmoid is shown for the first time
     width: 400
     height: 250
+
+    Plasmoid.backgroundHints: Plasmoid.NoBackground
     
     // Configuration
     property bool showShadowCfg: Plasmoid.configuration.showShadow
@@ -43,6 +45,8 @@ Item {
     
     property int roundedCornersCfg: Plasmoid.configuration.roundedCorners
     property bool animatedTransitionsCfg: Plasmoid.configuration.animatedTransitions
+
+    property string cfg_contentType: plasmoid.configuration.contentType
     
     // logic
     property string selectedProviderCfg: plasmoid.configuration.selectedProvider
@@ -54,7 +58,54 @@ Item {
     // constants
     readonly property int __animationsDuration: 2000
 
+    readonly property var __contentProvidersMap: { "image" : "ImageProvider.qml", "slideshow" : "SlideshowProvider.qml", "potd" : "PotdProvider.qml"  }
+
     signal newSizeUpdated( size newSize)
+
+    //HACK: Let plasmoid to restore it's width and height. They are updated too late.
+    Timer {
+        id: initTimer
+        interval: 100
+        running: true
+
+        onTriggered: contentProviderLoader.active = true
+    }
+
+    Loader {
+        id: contentProviderLoader
+
+        active: false
+        source: __contentProvidersMap[cfg_contentType]
+
+        onLoaded: {
+            if( animatedTransitionsCfg ) {
+                photoBuffer.pixmap = photo.pixmap
+            }
+            photo.pixmap = item.pixmap
+            toolTipArea.mainText = item.toolTipTitle
+            toolTipArea.subText = item.toolTipContent
+            errorLabel.errorText = item.errorText
+        }
+    }
+
+    Connections {
+        target: contentProviderLoader.item
+
+        onPixmapChanged: {
+
+            console.debug("IMAGE RECEIVED")
+
+            if( animatedTransitionsCfg ) {
+                photoBuffer.pixmap = photo.pixmap
+            }
+
+            photo.pixmap = contentProviderLoader.item.pixmap
+        }
+
+        onToolTipTitleChanged: toolTipArea.mainText = contentProviderLoader.item.toolTipTitle
+        onToolTipContentChanged: toolTipArea.subText = contentProviderLoader.item.toolTipContent
+        onErrorTextChanged: errorLabel.errorText = contentProviderLoader.item.errorText
+    }
 
     QPixmapItem {
         id: photo
@@ -101,38 +152,6 @@ Item {
             colorGroup: SystemPalette.Active
         }
     }
-    
-    Plasmoid.backgroundHints: Plasmoid.NoBackground
-
-    // HACK: Delay data source connection. Let all properties to be initialized and emit on<Property>Changed signals
-    // If we connect to data source in onSelectedProviderCfgChanged and we have valid cache in data engine,
-    // plasmoid and rootItem width and height are still 0s
-    Timer {
-        id: initTimer
-        interval: 100
-        running: true
-
-        onTriggered: {
-            drawingArea.width = rootItem.width
-            drawingArea.height = rootItem.height
-
-            if( rootItem.selectedProviderCfg != "" ) {
-                potdEngine.connectSource( rootItem.selectedProviderCfg )
-                __connectedProvider = rootItem.selectedProviderCfg
-            }
-
-            rootItem.selectedProviderCfgChanged.connect( function(fasd) {
-
-                if( rootItem.__connectedProvider != "" ) {
-                    potdEngine.disconnectSource( rootItem.__connectedProvider )
-                }
-
-                plasmoid.busy = true;
-                potdEngine.connectSource( rootItem.selectedProviderCfg )
-                rootItem.__connectedProvider = rootItem.selectedProviderCfg
-            } )
-        }
-    }
 
     function rescale() {
 
@@ -172,47 +191,17 @@ Item {
     function action_nextprovider() {
         plasmoid.busy = true
 
-        var keys = Object.keys(potdEngine.data["Providers"])
-
-        // find provider position
-        var i;
-        for( i = 0; i < keys.length; ++i ) {
-            if( keys[i] === selectedProviderCfg ) {
-                break;
-            }
+        if( contentProviderLoader.item.next ) {
+            contentProviderLoader.item.next()
         }
-
-        ++i; // go to next
-
-        if( i === keys.length ) {
-            // current provider is the last one. Go to first
-            i = 0;
-        }
-
-        plasmoid.configuration.selectedProvider = keys[i]
     }
 
     function action_prevprovider() {
         plasmoid.busy = true
 
-        var keys = Object.keys(potdEngine.data["Providers"])
-
-        // find provider position
-        var i;
-        for( i = 0; i < keys.length; ++i ) {
-            if( keys[i] === selectedProviderCfg ) {
-                break;
-            }
+        if( contentProviderLoader.item.previous ) {
+            contentProviderLoader.item.previous()
         }
-
-        --i; // go to previous
-
-        if( i < 0 ) {
-            // current provider is the first one. Go to last
-            i = keys.length - 1;
-        }
-
-        plasmoid.configuration.selectedProvider = keys[i]
     }
     
     onSelectedProviderCfgChanged: {
@@ -345,41 +334,44 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.margins: photoItem.x + 2
+
+            showNextButton: contentProviderLoader.item != undefined && contentProviderLoader.item.next != undefined
+            showPreviousButton: contentProviderLoader.item != undefined && contentProviderLoader.item.previous != undefined
         }
     }
     
-    PlasmaCore.DataSource {
-        id: potdEngine
-        engine: "org.task_struct.photooftheday"
-        connectedSources: "Providers"
-        interval: updateIntervalCgf * 60000 // convert minutes to milliseconds
+//    PlasmaCore.DataSource {
+//        id: potdEngine
+//        engine: "org.task_struct.photooftheday"
+//        connectedSources: "Providers"
+//        interval: updateIntervalCgf * 60000 // convert minutes to milliseconds
 
-        onNewData: {
-            console.debug( "onNewData " + sourceName )
+//        onNewData: {
+//            console.debug( "onNewData " + sourceName )
             
-            if( selectedProviderCfg == sourceName ) {
+//            if( selectedProviderCfg == sourceName ) {
 
-                plasmoid.busy = false
+//                plasmoid.busy = false
 
-                if( data.Error !== undefined &&  data.Error != "" ) {
-                    errorLabel.errorText = data.Error
-                }
+//                if( data.Error !== undefined &&  data.Error != "" ) {
+//                    errorLabel.errorText = data.Error
+//                }
 
-                if( undefined === data.Photo ) {
-                    return
-                }
+//                if( undefined === data.Photo ) {
+//                    return
+//                }
                 
-                // set current image as back
-                photoBuffer.pixmap = photo.pixmap
+//                // set current image as back
+//                photoBuffer.pixmap = photo.pixmap
 
-                // load new image
-                photo.pixmap = data.Photo
+//                // load new image
+//                photo.pixmap = data.Photo
 
-                toolTipArea.mainText = data.Title
-                toolTipArea.subText = potdEngine.data["Providers"][sourceName]
-            }
-        }
-    }
+//                toolTipArea.mainText = data.Title
+//                toolTipArea.subText = potdEngine.data["Providers"][sourceName]
+//            }
+//        }
+//    }
 
     ErrorLabel {
         id: errorLabel

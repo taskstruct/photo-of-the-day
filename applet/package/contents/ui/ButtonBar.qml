@@ -16,6 +16,9 @@ PlasmaCore.FrameSvgItem {
     opacity: 0.0
     visible: false
 
+    property alias showNextButton: nextButton.visible
+    property alias showPreviousButton: prevButton.visible
+
     RowLayout
     {
         id: buttonsRow
@@ -24,6 +27,8 @@ PlasmaCore.FrameSvgItem {
 
         PlasmaComponents.Button
         {
+            id: prevButton
+
             iconSource: "go-previous"
 
             enabled: selectedProviderCfg.length != 0
@@ -32,6 +37,8 @@ PlasmaCore.FrameSvgItem {
         }
 
         PlasmaComponents.Button {
+            id: nextButton
+
             iconSource: "go-next"
 
             enabled: selectedProviderCfg.length != 0
