@@ -18,8 +18,8 @@ ColumnLayout {
 
     //BEGIN functions
     function saveConfig() {
-        plasmoid.configuration.imageFileName = fileDialog.fileUrl
         plasmoid.configuration.recentImages = imageModel.recentImages
+        plasmoid.configuration.imageFileName = imageModel.recentImages[ previewsGrid.currentIndex ]
     }
 
     //    function restoreConfig() {
@@ -114,10 +114,10 @@ ColumnLayout {
                     }
 
                     iconSource: "list-remove"
-                    tooltip: i18n("Remove wallpaper")
+                    tooltip: i18n("Remove image")
                     flat: false
 //                    visible: model.removable && !model.pendingDeletion
-//                    onClicked: imageWallpaper.wallpaperModel.setPendingDeletion(index, true)
+                    onClicked: imageModel.removeImage( index )
                     opacity: imageDelegate.containsMouse ? 1 : 0
 
                     Behavior on opacity {
@@ -127,6 +127,8 @@ ColumnLayout {
                         }
                     }
                 }
+
+                onClicked: previewsGrid.currentIndex = index
             }
 
             Keys.onPressed: {
@@ -145,6 +147,8 @@ ColumnLayout {
             Keys.onRightPressed: moveCurrentIndexRight()
             Keys.onUpPressed: moveCurrentIndexUp()
             Keys.onDownPressed: moveCurrentIndexDown()
+
+            onCurrentIndexChanged: configImageForm.configurationChanged()
 
         }
     }
@@ -167,7 +171,10 @@ ColumnLayout {
                 nameFilters: [ "Image files (*.jpg *.png)", "All files (*)" ]
 
                 onAccepted: {
-                    if( imageModel.addImage(fileUrl.toString()) ) {
+                    // remove "file://"
+                    var path = fileUrl.toString().substring( 6 )
+
+                    if( imageModel.addImage(path) ) {
                         configImageForm.configurationChanged()
                     }
                 }
