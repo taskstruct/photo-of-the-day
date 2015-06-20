@@ -12,8 +12,6 @@ import org.task_struct.private.photooftheday 1.0
 ColumnLayout {
     id: configImageForm
 
-    property url cfg_imageUrl: plasmoid.configuration.imageFileName
-
     signal configurationChanged
 
     //BEGIN functions
@@ -29,7 +27,22 @@ ColumnLayout {
     ImageModel {
         id: imageModel
 
-        Component.onCompleted: recentImages = plasmoid.configuration.recentImages
+        Component.onCompleted: {
+            recentImages = plasmoid.configuration.recentImages;
+
+            var i = 0;
+            var images = plasmoid.configuration.recentImages
+            var selected = plasmoid.configuration.imageFileName
+
+            while( i < images.length ) {
+                if( images[i] == selected ) {
+                    break
+                }
+                ++i
+            }
+
+            previewsGrid.currentIndex = i
+        }
     }
 
     ScrollView {
@@ -55,6 +68,10 @@ ColumnLayout {
 
             model: imageModel.recentImages
 
+            SystemPalette {
+                id: sysPal
+            }
+
             delegate: MouseArea {
                 id: imageDelegate
 
@@ -66,7 +83,7 @@ ColumnLayout {
                 Rectangle {
                     id: background
 
-                    color: "lightblue"
+                    color: previewsGrid.currentIndex == index ? sysPal.highlight : sysPal.button
 
                     opacity: 0.8
 
@@ -116,7 +133,6 @@ ColumnLayout {
                     iconSource: "list-remove"
                     tooltip: i18n("Remove image")
                     flat: false
-//                    visible: model.removable && !model.pendingDeletion
                     onClicked: imageModel.removeImage( index )
                     opacity: imageDelegate.containsMouse ? 1 : 0
 
@@ -126,6 +142,11 @@ ColumnLayout {
                             easing.type: Easing.OutQuad
                         }
                     }
+                }
+
+                Text {
+                    color: "red"
+                    text: index
                 }
 
                 onClicked: previewsGrid.currentIndex = index
@@ -172,7 +193,7 @@ ColumnLayout {
 
                 onAccepted: {
                     // remove "file://"
-                    var path = fileUrl.toString().substring( 6 )
+                    var path = fileUrl.toString().substring( 7 )
 
                     if( imageModel.addImage(path) ) {
                         configImageForm.configurationChanged()
